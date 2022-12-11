@@ -16,7 +16,7 @@ resources:
     type: 'github'
     name: 'nnellans/azure-data-factory'
     ref: 'adf_publish'
-    endpoint: 'nnellans'
+    endpoint: 'nnellans' # githubServiceConnection
 
 steps:
 
