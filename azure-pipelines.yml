@@ -143,7 +143,8 @@ steps:
       az deployment group create --what-if `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
+        --debug `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json `
-        --parameters containerUri="$fixedURI" `
-        --parameters containerSasToken="$(AzureFileCopy.StorageContainerSasToken)" `
-        --parameters factoryName="$(destAdf)"
+        --parameters "containerUri="$fixedURI" `
+        --parameters "containerSasToken=$(AzureFileCopy.StorageContainerSasToken)" `
+        --parameters "factoryName=$(destAdf)"
