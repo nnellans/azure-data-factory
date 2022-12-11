@@ -122,7 +122,7 @@ steps:
     targetType: 'inline'
     script: |
       Write-Output "uri test: $(AzureFileCopy.StorageContainerUri)"
-      Write-Output "update test: ${{ replace('variables[AzureFileCopy.StorageContainerUri]', 'linkedtemplates/', 'linkedtemplates') }}"
+      Write-Output "update test: ${{ replace(variables[AzureFileCopy.StorageContainerUri], 'linkedtemplates/', 'linkedtemplates') }}"
       Write-Output "sas test: $(AzureFileCopy.StorageContainerSasToken)"
 
 # perform a what-if deployment
@@ -145,6 +145,6 @@ steps:
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_master.json `
         --parameters $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplateParameters_master.json `
-        --parameters containerUri='${{ replace('variables[AzureFileCopy.StorageContainerUri]', 'linkedtemplates/', 'linkedtemplates') }}' `
+        --parameters containerUri='${{ replace(variables[AzureFileCopy.StorageContainerUri], 'linkedtemplates/', 'linkedtemplates') }}' `
         --parameters containerSasToken='$(AzureFileCopy.StorageContainerSasToken)' `
         --parameters factoryName='$(destAdf)'
