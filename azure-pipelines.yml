@@ -143,6 +143,6 @@ steps:
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_master.json `
         --parameters $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplateParameters_master.json `
-        --parameters containerUri='${{ replace($(AzureFileCopy.StorageContainerUri), 'linkedtemplates/', 'linkedtemplates') }}' `
+        --parameters containerUri='${{ replace('$(AzureFileCopy.StorageContainerUri)', 'linkedtemplates/', 'linkedtemplates') }}' `
         --parameters containerSasToken='$(AzureFileCopy.StorageContainerSasToken)' `
         --parameters factoryName='$(destAdf)'
