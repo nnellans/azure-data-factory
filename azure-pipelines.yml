@@ -34,7 +34,7 @@ steps:
 - checkout: 'adfTemplates'
 
 #------------------
-# If using default Template
+# If using the standard Template
 #------------------
 
 # perform a what-if deployment
@@ -52,6 +52,14 @@ steps:
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json
+
+# pause for validation before proceeding
+- task: 'ManualValidation@0'
+  timeoutInMinutes: 60
+  inputs:
+    notifyUsers: |
+      me@nathannellans.com
+    onTimeout: 'reject'
 
 #------------------
 # If using Linked Templates
