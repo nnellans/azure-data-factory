@@ -8,28 +8,29 @@ parameters:
 - name: 'deployType'
   type: 'string'
   values:
-  - 'standard'
-  - 'linked'
+  - 'standard' # for a deployment of the all-in-one ARM Template
+  - 'linked' # for a deployment of the ARM Linked Templates
   default: 'standard'
 
 variables:
-  azureServiceConnection: 'test-ado-serviceconnection'
-  sourceAzureDataFactory: 'adf-test-nn'
-  destAzureDataFactory: 'adf-test-new'
-  destAzureDataFactoryRG: 'adf-test'
-  linkedTemplatesStorageAccount: 'storageAccountName'
+  azureServiceConnection: 'test-ado-serviceconnection' # Azure DevOps Service Connection for Azure
+  sourceAdf: 'adf-test-nn' # name of the source Azure Data Factory instance
+  sourceAdfPublishBranch: 'adf_publish'
+  destAdf: 'adf-test-new' # name of the destination Azure Data Factory instance
+  destAdfRg: 'adf-test-new' # Resource Group for the destination Azure Data Factory instance
+  linkedTemplatesStorageAccount: 'storageAccountName' # name of the Storage Account to hold the ARM Linked Templates
 
 resources:
   repositories:
-  - repository: 'adf_publish'
+  - repository: 'adfTemplates'
     type: 'github'
     name: 'nnellans/azure-data-factory'
-    ref: 'adf_publish'
-    endpoint: 'nnellans' # githubServiceConnection
+    ref: $(sourceAdfPublishBranch)
+    endpoint: 'nnellans' # Azure DevOps Service Connection for GitHub
 
 steps:
 
-- checkout: 'adf_publish'
+- checkout: 'adfTemplates'
 
 #------------------
 # If using default Template
@@ -38,7 +39,7 @@ steps:
 # perform a what-if deployment
 - task: 'AzureCLI@2'
   displayName: 'What-If Deployment for Standard Templates'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'standard') )
+  condition: and( succeeded(), eq( ${{ parameters.deployType }}, 'standard' ) )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
@@ -47,9 +48,9 @@ steps:
     inlineScript: |
       az deployment group create `
         --what-if `
-        --resource-group $(destAzureDataFactoryRG) `
-        --template-file $(System.DefaultWorkingDirectory)\$(sourceAzureDataFactory)\ARMTemplateForFactory.json `
-        --parameters $(System.DefaultWorkingDirectory)\$(sourceAzureDataFactory)\ARMTemplateParametersForFactory.json
+        --resource-group $(destAdfRg) `
+        --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
+        --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json
 
 #------------------
 # If using Linked Templates
@@ -59,7 +60,7 @@ steps:
 - task: 'AzureFileCopy@5'
   name: 'AzureFileCopy'
   displayName: 'Copy Linked Templates to Azure Storage'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'linked') )
+  condition: and( succeeded(), eq( ${{ parameters.deployType }}, 'linked' ) )
   inputs:
     azureSubscription: $(azureServiceConnection)
     SourcePath: ''
@@ -72,7 +73,7 @@ steps:
 # perform a what-if deployment
 - task: 'AzureCLI@2'
   displayName: 'What-If Deployment for Linked Templates'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'linked') )
+  condition: and( succeeded(), eq( ${{ parameters.deployType }}, 'linked' ) )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
@@ -83,6 +84,6 @@ steps:
         --what-if
         --subscription blah `
         --resource-group blah `
-        --template-file $(System.DefaultWorkingDirectory)/$(azureDataFactory)/linkedTemplates/ArmTemplate_master.json`
-        --parameters $(System.DefaultWorkingDirectory)/$(azureDataFactory)/linkedTemplates/ArmTemplateParameters_master.json`
+        --template-file $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_master.json`
+        --parameters $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplateParameters_master.json`
         
