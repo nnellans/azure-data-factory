@@ -22,10 +22,19 @@ steps:
 
 checkout: 'adf_publish'
 
+# testing
+- task: 'PowerShell@2'
+  inputs:
+    pwsh: true
+    targetType: 'inline'
+    script: |
+      Get-ChildItem $(Agent.BuildDirectory)
+    
+
 # copy the ARM Linked Templates from the ADF repo to an Azure Storage account
 - task: 'AzureFileCopy@5'
-  enabled: false
   name: 'AzureFileCopy'
+  enabled: false
   inputs:
     azureSubscription: $(azureServiceConnection)
     SourcePath: ''
