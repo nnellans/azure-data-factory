@@ -59,7 +59,7 @@ steps:
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
-        --parameters factoryname='$(destAdf)'
+        --parameters factoryName='$(destAdf)'
 
 # perform a standard deployment
 - task: 'AzureCLI@2'
@@ -75,7 +75,7 @@ steps:
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
-        --parameters factoryname='$(destAdf)'
+        --parameters factoryName='$(destAdf)'
 
 #------------------
 # If using Linked Templates
@@ -110,5 +110,5 @@ steps:
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_master.json `
         --parameters $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplateParameters_master.json `
-        --parameters factoryname='$(destAdf)'
+        --parameters factoryName='$(destAdf)'
         
