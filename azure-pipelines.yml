@@ -143,7 +143,29 @@ steps:
       az deployment group create --what-if `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
-        --debug `
+        --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json `
+        --parameters containerUri=$fixedURI `
+        --parameters '"containerSasToken=$(AzureFileCopy.StorageContainerSasToken)"' `
+        --parameters factoryName=$(destAdf)
+
+# perform a standard deployment
+- task: 'AzureCLI@2'
+  displayName: 'Standard Deployment for Linked Templates'
+  condition: |
+    and(
+      succeeded(),
+      eq('${{ parameters.deployType }}', 'standard'),
+      eq('${{ parameters.deployTemplate }}', 'linked')
+    )
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "linkedtemplates/", "linkedtemplates"
+      az deployment group create --what-if `
+        --resource-group $(destAdfRg) `
+        --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json `
         --parameters containerUri=$fixedURI `
         --parameters '"containerSasToken=$(AzureFileCopy.StorageContainerSasToken)"' `
