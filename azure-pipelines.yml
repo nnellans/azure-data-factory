@@ -2,7 +2,7 @@ trigger: 'none' # disable CI trigger
 pr: 'none' # disable PR trigger
 
 pool:
-  vmImage: 'windows-2019' # the AzureFileCopy task requires a Windows agent
+  vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
 
 parameters:
 - name: 'deployType'
@@ -95,7 +95,11 @@ steps:
 - task: 'AzureFileCopy@5'
   name: 'AzureFileCopy'
   displayName: 'Copy Linked Templates to Azure Storage'
-  condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
+  condition: |
+    and(
+      succeeded(),
+      eq('${{ parameters.deployTemplate }}', 'linked')
+    )
   inputs:
     azureSubscription: $(azureServiceConnection)
     SourcePath: '$(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/*.json'
@@ -107,6 +111,12 @@ steps:
 
 # testing
 - task: 'PowerShell@2'
+  condition: |
+    and(
+      succeeded(),
+      eq('${{ parameters.deployType }}', 'whatif'),
+      eq('${{ parameters.deployTemplate }}', 'linked')
+    )
   inputs:
     pwsh: true
     targetType: 'inline'
@@ -117,7 +127,12 @@ steps:
 # perform a what-if deployment
 - task: 'AzureCLI@2'
   displayName: 'What-If Deployment for Linked Templates'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'whatif'), eq('${{ parameters.deployTemplate }}', 'linked') )
+  condition: |
+    and(
+      succeeded(),
+      eq('${{ parameters.deployType }}', 'whatif'),
+      eq('${{ parameters.deployTemplate }}', 'linked')
+    )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
