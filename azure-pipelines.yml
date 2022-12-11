@@ -82,7 +82,7 @@ steps:
 #------------------------------------
 
 # copy the ARM Linked Templates from the ADF repo to Azure Storage
-- task: 'AzureFileCopy@5'
+- task: 'AzureFileCopy@5.214.0'
   name: 'AzureFileCopy'
   displayName: 'Copy Linked Templates to Azure Storage'
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
