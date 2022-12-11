@@ -122,6 +122,7 @@ steps:
     targetType: 'inline'
     script: |
       Write-Output "uri test: $(AzureFileCopy.StorageContainerUri)"
+      Write-Output "update test: ${{ replace('$(AzureFileCopy.StorageContainerUri)', 'linkedtemplates/', 'linkedtemplates') }}"
       Write-Output "sas test: $(AzureFileCopy.StorageContainerSasToken)"
 
 # perform a what-if deployment
