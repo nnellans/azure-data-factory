@@ -47,8 +47,8 @@ steps:
       az deployment group create `
         --what-if `
         --resource-group $(destAzureDataFactoryRG) `
-        --template-file $(Agent.BuildDirectory)/$(sourceAzureDataFactory)/ARMTemplateForFactory.json `
-        --parameters $(Agent.BuildDirectory)/$(sourceAzureDataFactory)/ARMTemplateParametersForFactory.json
+        --template-file $(Agent.BuildDirectory)\$(sourceAzureDataFactory)\ARMTemplateForFactory.json `
+        --parameters $(Agent.BuildDirectory)\$(sourceAzureDataFactory)\ARMTemplateParametersForFactory.json
 
 #------------------
 # If using Linked Templates
