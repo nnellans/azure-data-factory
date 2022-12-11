@@ -26,7 +26,8 @@ variables:
   sourceAdfPublishBranch: 'adf_publish'
   destAdf: 'adf-test-new'                              # name of the destination Azure Data Factory instance
   destAdfRg: 'adf-test-new'                            # Resource Group for the destination Azure Data Factory instance
-  linkedTemplatesStorageAccount: 'adftestnn'           # name of the Storage Account to hold the ARM Linked Templates
+  linkedTemplatesStorage: 'adftestnn'                  # name of the Storage Account to hold the ARM Linked Templates
+  linkedTemplatesStorageContainer: 'linkedtemplates'   # name of the Container to use on the Storage Account
 
 resources:
   repositories:
@@ -103,8 +104,8 @@ steps:
     azureSubscription: $(azureServiceConnection)
     SourcePath: '$(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/*.json'
     Destination: 'AzureBlob'
-    storage: $(linkedTemplatesStorageAccount)
-    ContainerName: 'linkedTemplates' # will be automatically created if it doesn't exist
+    storage: $(linkedTemplatesStorage)
+    ContainerName: $(linkedTemplatesStorageContainer) # will be automatically created if it doesn't exist
     #CleanTargetBeforeCopy: true # default is false
     #sasTokenTimeoutInMinutes: 120 # default is 240
 
@@ -122,7 +123,6 @@ steps:
     targetType: 'inline'
     script: |
       Write-Output "uri test: $(AzureFileCopy.StorageContainerUri)"
-      Write-Output "update test: ${{ replace(variables['AzureFileCopy.StorageContainerUri'], 'linkedtemplates/', 'linkedtemplates') }}"
       Write-Output "sas test: $(AzureFileCopy.StorageContainerSasToken)"
 
 # perform a what-if deployment
@@ -140,11 +140,12 @@ steps:
     scriptLocation: 'inlineScript'
     scriptArguments: ''
     inlineScript: |
-      
+      $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "linkedtemplates/", "linkedtemplates"
+      Write-Output "fixed test: $fixedURI"
       az deployment group create --what-if `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_master.json `
         --parameters $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplateParameters_master.json `
-        --parameters containerUri='${{ replace(variables['AzureFileCopy.StorageContainerUri'], 'linkedtemplates/', 'linkedtemplates') }}' `
+        --parameters containerUri='$fixedURI' `
         --parameters containerSasToken='$(AzureFileCopy.StorageContainerSasToken)' `
         --parameters factoryName='$(destAdf)'
