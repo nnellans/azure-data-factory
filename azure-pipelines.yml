@@ -26,7 +26,7 @@ variables:
   sourceAdfPublishBranch: 'adf_publish'
   destAdf: 'adf-test-new' # name of the destination Azure Data Factory instance
   destAdfRg: 'adf-test-new' # Resource Group for the destination Azure Data Factory instance
-  linkedTemplatesStorageAccount: 'storageAccountName' # name of the Storage Account to hold the ARM Linked Templates
+  linkedTemplatesStorageAccount: 'adftestnn' # name of the Storage Account to hold the ARM Linked Templates
 
 resources:
   repositories:
@@ -40,9 +40,9 @@ steps:
 
 - checkout: 'adfTemplates'
 
-#------------------
+#------------------------------------
 # If using the all-in-one Template
-#------------------
+#------------------------------------
 
 # perform a what-if deployment
 - task: 'AzureCLI@2'
@@ -77,11 +77,11 @@ steps:
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
         --parameters factoryName='$(destAdf)'
 
-#------------------
-# If using Linked Templates
-#------------------
+#------------------------------------
+# If using the Linked Templates
+#------------------------------------
 
-# copy the ARM Linked Templates from the ADF repo to an Azure Storage account
+# copy the ARM Linked Templates from the ADF repo to Azure Storage
 - task: 'AzureFileCopy@5'
   name: 'AzureFileCopy'
   displayName: 'Copy Linked Templates to Azure Storage'
@@ -94,6 +94,15 @@ steps:
     ContainerName: 'linkedTemplates' # will be automatically created if it doesn't exist
     #CleanTargetBeforeCopy: true # default is false
     #sasTokenTimeoutInMinutes: 120 # default is 240
+
+# testing
+- task: 'PowerShell@2'
+  inputs:
+    pwsh: true
+    targetType: 'inline'
+    script: |
+      Write-Output $(AzureFileCopy.StorageContainerUri)
+      Write-Output $(AzureFileCopy.StorageContainerSasToken)
 
 # perform a what-if deployment
 - task: 'AzureCLI@2'
@@ -110,5 +119,7 @@ steps:
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_master.json `
         --parameters $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplateParameters_master.json `
+        --parameters containerUri='$(AzureFileCopy.StorageContainerUri)' `
+        --parameters containerSasToken='$(AzureFileCopy.StorageContainerSasToken)' `
         --parameters factoryName='$(destAdf)'
         
