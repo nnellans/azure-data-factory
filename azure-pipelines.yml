@@ -37,7 +37,7 @@ steps:
 
 # perform a what-if deployment
 - task: 'AzureCLI@2'
-  condition: and( succeeded(), eq(parameters.deployType, 'standard') )
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'standard') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
@@ -57,7 +57,7 @@ steps:
 # copy the ARM Linked Templates from the ADF repo to an Azure Storage account
 - task: 'AzureFileCopy@5'
   name: 'AzureFileCopy'
-  condition: and( succeeded(), eq(parameters.deployType, 'linked') )
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     SourcePath: ''
@@ -69,7 +69,7 @@ steps:
 
 # perform a what-if deployment
 - task: 'AzureCLI@2'
-  condition: and( succeeded(), eq(parameters.deployType, 'linked') )
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
