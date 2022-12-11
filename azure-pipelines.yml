@@ -6,10 +6,11 @@ pool:
 
 parameters:
 - name: 'deployType'
+  displayName: 'Type of ARM Deployment'
   type: 'string'
   values:
   - 'standard' # for a deployment of the all-in-one ARM Template
-  - 'linked' # for a deployment of the ARM Linked Templates
+  - 'linked' # for a deployment of the Linked ARM Templates
   default: 'standard'
 
 variables:
@@ -39,7 +40,7 @@ steps:
 # perform a what-if deployment
 - task: 'AzureCLI@2'
   displayName: 'What-If Deployment for Standard Templates'
-  condition: and( succeeded(), eq( ${{ parameters.deployType }}, 'standard' ) )
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'standard') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
@@ -60,7 +61,7 @@ steps:
 - task: 'AzureFileCopy@5'
   name: 'AzureFileCopy'
   displayName: 'Copy Linked Templates to Azure Storage'
-  condition: and( succeeded(), eq( ${{ parameters.deployType }}, 'linked' ) )
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     SourcePath: ''
@@ -73,7 +74,7 @@ steps:
 # perform a what-if deployment
 - task: 'AzureCLI@2'
   displayName: 'What-If Deployment for Linked Templates'
-  condition: and( succeeded(), eq( ${{ parameters.deployType }}, 'linked' ) )
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
