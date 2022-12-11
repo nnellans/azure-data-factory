@@ -2,7 +2,7 @@ trigger: 'none' # disable CI trigger
 pr: 'none' # disable PR trigger
 
 pool:
-  vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
+  vmImage: 'windows-2019' # the AzureFileCopy task requires a Windows agent
 
 parameters:
 - name: 'deployType'
@@ -82,7 +82,7 @@ steps:
 #------------------------------------
 
 # copy the ARM Linked Templates from the ADF repo to Azure Storage
-- task: 'AzureFileCopy@5.214.0'
+- task: 'AzureFileCopy@5'
   name: 'AzureFileCopy'
   displayName: 'Copy Linked Templates to Azure Storage'
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
