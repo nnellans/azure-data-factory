@@ -1,0 +1,53 @@
+trigger: 'none' # disable CI trigger
+pr: 'none' # disable PR trigger
+
+pool:
+  vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
+
+#parameters:
+
+variables:
+  azureServiceConnection: 'serviceConnectionName'
+  linkedTemplatesStorageAccount: 'storageAccountName'
+
+resources:
+  repositories:
+  - repository: 'adf_publish'
+    type: 'github'
+    name: 'nnellans/azure-data-factory'
+    ref: 'adf_publish'
+    endpoint: 'githubServiceConnection'
+
+steps:
+
+checkout: 'adf_publish'
+
+# copy the ARM Linked Templates from the ADF repo to an Azure Storage account
+- task: 'AzureFileCopy@5'
+  enabled: false
+  name: 'AzureFileCopy'
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    SourcePath: ''
+    Destination: 'AzureBlob'
+    storage: $(linkedTemplatesStorageAccount)
+    ContainerName: 'linkedTemplates' # will be automatically created if it doesn't exist
+    #CleanTargetBeforeCopy: true # default is false
+    #sasTokenTimeoutInMinutes: 120 # default is 240
+
+# perform a what-if deployment
+- task: 'AzureCLI@2'
+  enabled: false
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az deployment group create `
+        --what-if
+        --subscription blah `
+        --resource-group blah `
+        --template-file $(Agent.BuildDirectory)/repoFolder/adfName/linkedTemplates/ArmTemplate_master.json`
+        --parameters $(Agent.BuildDirectory)/repoFolder/adfName/linkedTemplates/ArmTemplateParameters_master.json`
+    scriptArguments: ''
+        
