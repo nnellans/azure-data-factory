@@ -45,10 +45,10 @@ steps:
     scriptArguments: ''
     inlineScript: |
       az deployment group create `
-        --what-if
+        --what-if `
         --resource-group $(destAzureDataFactoryRG) `
-        --template-file $(Agent.BuildDirectory)/$(sourceAzureDataFactory)/ARMTemplateForFactory.json`
-        --parameters $(Agent.BuildDirectory)/$(sourceAzureDataFactory)/ARMTemplateParametersForFactory.json`
+        --template-file $(Agent.BuildDirectory)/$(sourceAzureDataFactory)/ARMTemplateForFactory.json `
+        --parameters $(Agent.BuildDirectory)/$(sourceAzureDataFactory)/ARMTemplateParametersForFactory.json
 
 #------------------
 # If using Linked Templates
