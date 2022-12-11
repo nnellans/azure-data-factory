@@ -17,16 +17,16 @@ parameters:
   type: 'string'
   values:
   - 'all-in-one' # for a deployment of the all-in-one ARM Template
-  - 'linked' # for a deployment of the Linked ARM Templates
+  - 'linked'     # for a deployment of the Linked ARM Templates
   default: 'standard' 
 
 variables:
   azureServiceConnection: 'test-ado-serviceconnection' # Azure DevOps Service Connection for Azure
-  sourceAdf: 'adf-test-nn' # name of the source Azure Data Factory instance
+  sourceAdf: 'adf-test-nn'                             # name of the source Azure Data Factory instance
   sourceAdfPublishBranch: 'adf_publish'
-  destAdf: 'adf-test-new' # name of the destination Azure Data Factory instance
-  destAdfRg: 'adf-test-new' # Resource Group for the destination Azure Data Factory instance
-  linkedTemplatesStorageAccount: 'adftestnn' # name of the Storage Account to hold the ARM Linked Templates
+  destAdf: 'adf-test-new'                              # name of the destination Azure Data Factory instance
+  destAdfRg: 'adf-test-new'                            # Resource Group for the destination Azure Data Factory instance
+  linkedTemplatesStorageAccount: 'adftestnn'           # name of the Storage Account to hold the ARM Linked Templates
 
 resources:
   repositories:
@@ -47,7 +47,12 @@ steps:
 # perform a what-if deployment
 - task: 'AzureCLI@2'
   displayName: 'What-If Deployment for All-in-one Templates'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'whatif'), eq('${{ parameters.deployTemplate }}', 'all-in-one') )
+  condition: |
+    and(
+      succeeded(),
+      eq('${{ parameters.deployType }}', 'whatif'),
+      eq('${{ parameters.deployTemplate }}', 'all-in-one')
+    )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
@@ -64,7 +69,12 @@ steps:
 # perform a standard deployment
 - task: 'AzureCLI@2'
   displayName: 'Standard Deployment for All-in-one Templates'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'standard'), eq('${{ parameters.deployTemplate }}', 'all-in-one') )
+  condition: |
+    and(
+      succeeded(),
+      eq('${{ parameters.deployType }}', 'standard'),
+      eq('${{ parameters.deployTemplate }}', 'all-in-one')
+    )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
