@@ -110,7 +110,7 @@ steps:
 
 # testing values from AzureFileCopy
 - task: 'PowerShell@2'
-  displayname: 'Testing output values from AzureFileCopy task'
+  displayName: 'Testing output values from AzureFileCopy task'
   condition: |
     and(
       succeeded(),
