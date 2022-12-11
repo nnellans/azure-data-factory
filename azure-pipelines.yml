@@ -16,7 +16,7 @@ parameters:
   displayName: 'Type of ARM Template to deploy'
   type: 'string'
   values:
-  - 'standard' # for a deployment of the all-in-one ARM Template
+  - 'all-in-one' # for a deployment of the all-in-one ARM Template
   - 'linked' # for a deployment of the Linked ARM Templates
   default: 'standard' 
 
@@ -41,13 +41,13 @@ steps:
 - checkout: 'adfTemplates'
 
 #------------------
-# If using the standard Template
+# If using the all-in-one Template
 #------------------
 
 # perform a what-if deployment
 - task: 'AzureCLI@2'
-  displayName: 'What-If Deployment for Standard Templates'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'whatif'), eq('${{ parameters.deployTemplate }}', 'standard') )
+  displayName: 'What-If Deployment for All-in-one Templates'
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'whatif'), eq('${{ parameters.deployTemplate }}', 'all-in-one') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
@@ -58,13 +58,13 @@ steps:
         --what-if `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
-        --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json
+        --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
         --parameters factoryname='$(destAdf)'
 
 # perform a standard deployment
 - task: 'AzureCLI@2'
-  displayName: 'Standard Deployment for Standard Templates'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'standard'), eq('${{ parameters.deployTemplate }}', 'standard') )
+  displayName: 'Standard Deployment for All-in-one Templates'
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'standard'), eq('${{ parameters.deployTemplate }}', 'all-in-one') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
@@ -74,7 +74,8 @@ steps:
       az deployment group create `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
-        --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json
+        --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
+        --parameters factoryname='$(destAdf)'
 
 #------------------
 # If using Linked Templates
@@ -106,8 +107,8 @@ steps:
     inlineScript: |
       az deployment group create `
         --what-if
-        --subscription blah `
-        --resource-group blah `
-        --template-file $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_master.json`
-        --parameters $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplateParameters_master.json`
+        --resource-group $(destAdfRg) `
+        --template-file $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_master.json `
+        --parameters $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplateParameters_master.json `
+        --parameters factoryname='$(destAdf)'
         
