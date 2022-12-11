@@ -4,11 +4,19 @@ pr: 'none' # disable PR trigger
 pool:
   vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
 
-#parameters:
+parameters:
+- name: 'deployType'
+  type: 'string'
+  values:
+  - 'standard'
+  - 'linked'
+  default: 'standard'
 
 variables:
-  azureServiceConnection: 'serviceConnectionName'
-  azureDataFactory: 'adf-test-nn'
+  azureServiceConnection: 'test-ado-serviceconnection'
+  sourceAzureDataFactory: 'adf-test-nn'
+  destAzureDataFactory: 'adf-test-new'
+  destAzureDataFactoryRG: 'adf-test'
   linkedTemplatesStorageAccount: 'storageAccountName'
 
 resources:
@@ -23,19 +31,33 @@ steps:
 
 - checkout: 'adf_publish'
 
-# testing
-- task: 'PowerShell@2'
+#------------------
+# If using default Template
+#------------------
+
+# perform a what-if deployment
+- task: 'AzureCLI@2'
+  condition: and( succeeded(), eq(parameters.deployType, 'standard') )
   inputs:
-    pwsh: true
-    targetType: 'inline'
-    script: |
-      Get-ChildItem $(System.DefaultWorkingDirectory)\$(azureDataFactory)
-    
+    azureSubscription: $(azureServiceConnection)
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    scriptArguments: ''
+    inlineScript: |
+      az deployment group create `
+        --what-if
+        --resource-group $(destAzureDataFactoryRG) `
+        --template-file $(Agent.BuildDirectory)/$(sourceAzureDataFactory)/ARMTemplateForFactory.json`
+        --parameters $(Agent.BuildDirectory)/$(sourceAzureDataFactory)/ARMTemplateParametersForFactory.json`
+
+#------------------
+# If using Linked Templates
+#------------------
 
 # copy the ARM Linked Templates from the ADF repo to an Azure Storage account
 - task: 'AzureFileCopy@5'
   name: 'AzureFileCopy'
-  enabled: false
+  condition: and( succeeded(), eq(parameters.deployType, 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     SourcePath: ''
@@ -47,11 +69,12 @@ steps:
 
 # perform a what-if deployment
 - task: 'AzureCLI@2'
-  enabled: false
+  condition: and( succeeded(), eq(parameters.deployType, 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
+    scriptArguments: ''
     inlineScript: |
       az deployment group create `
         --what-if
@@ -59,5 +82,4 @@ steps:
         --resource-group blah `
         --template-file $(Agent.BuildDirectory)/$(azureDataFactory)/linkedTemplates/ArmTemplate_master.json`
         --parameters $(Agent.BuildDirectory)/$(azureDataFactory)/linkedTemplates/ArmTemplateParameters_master.json`
-    scriptArguments: ''
         
