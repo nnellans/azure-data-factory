@@ -163,7 +163,7 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "linkedtemplates/", "linkedtemplates"
-      az deployment group create --what-if `
+      az deployment group create `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json `
