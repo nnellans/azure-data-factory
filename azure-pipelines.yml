@@ -88,7 +88,7 @@ steps:
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
-    SourcePath: ''
+    SourcePath: '$(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/*.json'
     Destination: 'AzureBlob'
     storage: $(linkedTemplatesStorageAccount)
     ContainerName: 'linkedTemplates' # will be automatically created if it doesn't exist
