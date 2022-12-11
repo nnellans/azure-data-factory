@@ -8,6 +8,7 @@ pool:
 
 variables:
   azureServiceConnection: 'serviceConnectionName'
+  azureDataFactory: 'adf-test-nn'
   linkedTemplatesStorageAccount: 'storageAccountName'
 
 resources:
@@ -28,7 +29,7 @@ steps:
     pwsh: true
     targetType: 'inline'
     script: |
-      Get-ChildItem $(System.DefaultWorkingDirectory)
+      Get-ChildItem $(System.DefaultWorkingDirectory)\$(azureDataFactory)
     
 
 # copy the ARM Linked Templates from the ADF repo to an Azure Storage account
