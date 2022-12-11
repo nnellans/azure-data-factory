@@ -1,5 +1,5 @@
 trigger: 'none' # disable CI trigger
-pr: 'none' # disable PR trigger
+pr: 'none'      # disable PR trigger
 
 pool:
   vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
@@ -121,8 +121,8 @@ steps:
     pwsh: true
     targetType: 'inline'
     script: |
-      Write-Output $(AzureFileCopy.StorageContainerUri)
-      Write-Output $(AzureFileCopy.StorageContainerSasToken)
+      Write-Output "uri test: $(AzureFileCopy.StorageContainerUri)"
+      Write-Output "sas test: $(AzureFileCopy.StorageContainerSasToken)"
 
 # perform a what-if deployment
 - task: 'AzureCLI@2'
