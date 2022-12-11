@@ -145,6 +145,6 @@ steps:
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
         --debug `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json `
-        --parameters "containerUri="$fixedURI" `
+        --parameters "containerUri=$fixedURI" `
         --parameters "containerSasToken=$(AzureFileCopy.StorageContainerSasToken)" `
         --parameters "factoryName=$(destAdf)"
