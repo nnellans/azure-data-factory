@@ -59,8 +59,7 @@ steps:
     scriptLocation: 'inlineScript'
     scriptArguments: ''
     inlineScript: |
-      az deployment group create `
-        --what-if `
+      az deployment group create --what-if `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
@@ -109,8 +108,9 @@ steps:
     #CleanTargetBeforeCopy: true # default is false
     #sasTokenTimeoutInMinutes: 120 # default is 240
 
-# testing
+# testing values from AzureFileCopy
 - task: 'PowerShell@2'
+  displayname: 'Testing output values from AzureFileCopy task'
   condition: |
     and(
       succeeded(),
@@ -139,8 +139,7 @@ steps:
     scriptLocation: 'inlineScript'
     scriptArguments: ''
     inlineScript: |
-      az deployment group create `
-        --what-if
+      az deployment group create --what-if `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_master.json `
         --parameters $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplateParameters_master.json `
