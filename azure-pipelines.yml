@@ -20,7 +20,7 @@ resources:
 
 steps:
 
-checkout: 'adf_publish'
+- checkout: 'adf_publish'
 
 # testing
 - task: 'PowerShell@2'
