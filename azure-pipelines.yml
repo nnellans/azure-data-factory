@@ -24,7 +24,7 @@ variables:
   azureServiceConnection: 'test-ado-serviceconnection' # Azure DevOps Service Connection for Azure
   sourceAdf: 'adf-test-nn'                             # name of the source Azure Data Factory instance
   sourceAdfPublishBranch: 'adf_publish'
-  destAdf: 'adf-test-new'                              # name of the destination Azure Data Factory instance
+  destAdf: 'adf-test-new-nn'                           # name of the destination Azure Data Factory instance
   destAdfRg: 'adf-test-new'                            # Resource Group for the destination Azure Data Factory instance
   linkedTemplatesStorage: 'adftestnn'                  # name of the Storage Account to hold the ARM Linked Templates
   linkedTemplatesStorageContainer: 'linkedtemplates'   # name of the Container to use on the Storage Account
