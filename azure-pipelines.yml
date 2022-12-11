@@ -141,11 +141,10 @@ steps:
     scriptArguments: ''
     inlineScript: |
       $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "linkedtemplates/", "linkedtemplates"
-      Write-Output "fixed test: $fixedURI"
-      echo az deployment group create --what-if `
+      az deployment group create --what-if `
         --resource-group $(destAdfRg) `
-        --template-file $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_master.json `
-        --parameters $(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplateParameters_master.json `
+        --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
+        --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json `
         --parameters containerUri=$fixedURI `
         --parameters containerSasToken='$(AzureFileCopy.StorageContainerSasToken)' `
         --parameters factoryName='$(destAdf)'
