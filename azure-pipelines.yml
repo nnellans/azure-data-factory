@@ -37,6 +37,7 @@ steps:
 
 # perform a what-if deployment
 - task: 'AzureCLI@2'
+  displayName: 'What-If Deployment for Standard Templates'
   condition: and( succeeded(), eq('${{ parameters.deployType }}', 'standard') )
   inputs:
     azureSubscription: $(azureServiceConnection)
@@ -47,8 +48,8 @@ steps:
       az deployment group create `
         --what-if `
         --resource-group $(destAzureDataFactoryRG) `
-        --template-file $(Agent.BuildDirectory)\$(sourceAzureDataFactory)\ARMTemplateForFactory.json `
-        --parameters $(Agent.BuildDirectory)\$(sourceAzureDataFactory)\ARMTemplateParametersForFactory.json
+        --template-file $(System.DefaultWorkingDirectory)\$(sourceAzureDataFactory)\ARMTemplateForFactory.json `
+        --parameters $(System.DefaultWorkingDirectory)\$(sourceAzureDataFactory)\ARMTemplateParametersForFactory.json
 
 #------------------
 # If using Linked Templates
@@ -57,6 +58,7 @@ steps:
 # copy the ARM Linked Templates from the ADF repo to an Azure Storage account
 - task: 'AzureFileCopy@5'
   name: 'AzureFileCopy'
+  displayName: 'Copy Linked Templates to Azure Storage'
   condition: and( succeeded(), eq('${{ parameters.deployType }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
@@ -69,6 +71,7 @@ steps:
 
 # perform a what-if deployment
 - task: 'AzureCLI@2'
+  displayName: 'What-If Deployment for Linked Templates'
   condition: and( succeeded(), eq('${{ parameters.deployType }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
@@ -80,6 +83,6 @@ steps:
         --what-if
         --subscription blah `
         --resource-group blah `
-        --template-file $(Agent.BuildDirectory)/$(azureDataFactory)/linkedTemplates/ArmTemplate_master.json`
-        --parameters $(Agent.BuildDirectory)/$(azureDataFactory)/linkedTemplates/ArmTemplateParameters_master.json`
+        --template-file $(System.DefaultWorkingDirectory)/$(azureDataFactory)/linkedTemplates/ArmTemplate_master.json`
+        --parameters $(System.DefaultWorkingDirectory)/$(azureDataFactory)/linkedTemplates/ArmTemplateParameters_master.json`
         
