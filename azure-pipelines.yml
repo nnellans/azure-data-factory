@@ -57,7 +57,7 @@ steps:
         --what-if
         --subscription blah `
         --resource-group blah `
-        --template-file $(Agent.BuildDirectory)/repoFolder/adfName/linkedTemplates/ArmTemplate_master.json`
-        --parameters $(Agent.BuildDirectory)/repoFolder/adfName/linkedTemplates/ArmTemplateParameters_master.json`
+        --template-file $(Agent.BuildDirectory)/$(azureDataFactory)/linkedTemplates/ArmTemplate_master.json`
+        --parameters $(Agent.BuildDirectory)/$(azureDataFactory)/linkedTemplates/ArmTemplateParameters_master.json`
     scriptArguments: ''
         
