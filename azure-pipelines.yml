@@ -27,7 +27,7 @@ variables:
   destAdf: 'adf-test-new-nn'                           # name of the destination Azure Data Factory instance
   destAdfRg: 'adf-test-new'                            # Resource Group for the destination Azure Data Factory instance
   linkedTemplatesStorage: 'adftestnn'                  # name of the Storage Account to hold the ARM Linked Templates
-  linkedTemplatesStorageContainer: 'linkedtemplates'   # name of the Container to use on the Storage Account
+  linkedTemplatesStorageContainer: 'linkedtemplates'   # name of the Container to use on the Storage Account, will be automatically created if it doesn't exist
 
 resources:
   repositories:
@@ -64,7 +64,7 @@ steps:
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
-        --parameters factoryName='$(destAdf)'
+        --parameters factoryName=$(destAdf)
 
 # perform a standard deployment
 - task: 'AzureCLI@2'
@@ -85,7 +85,7 @@ steps:
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
-        --parameters factoryName='$(destAdf)'
+        --parameters factoryName=$(destAdf)
 
 #------------------------------------
 # If using the Linked Templates
@@ -105,25 +105,9 @@ steps:
     SourcePath: '$(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/*.json'
     Destination: 'AzureBlob'
     storage: $(linkedTemplatesStorage)
-    ContainerName: $(linkedTemplatesStorageContainer) # will be automatically created if it doesn't exist
-    #CleanTargetBeforeCopy: true # default is false
-    #sasTokenTimeoutInMinutes: 120 # default is 240
-
-# testing values from AzureFileCopy
-- task: 'PowerShell@2'
-  displayName: 'Testing output values from AzureFileCopy task'
-  condition: |
-    and(
-      succeeded(),
-      eq('${{ parameters.deployType }}', 'whatif'),
-      eq('${{ parameters.deployTemplate }}', 'linked')
-    )
-  inputs:
-    pwsh: true
-    targetType: 'inline'
-    script: |
-      Write-Output "uri test: $(AzureFileCopy.StorageContainerUri)"
-      Write-Output "sas test: $(AzureFileCopy.StorageContainerSasToken)"
+    ContainerName: $(linkedTemplatesStorageContainer)
+    CleanTargetBeforeCopy: true   # default is false
+    sasTokenTimeoutInMinutes: 120 # default is 240
 
 # perform a what-if deployment
 - task: 'AzureCLI@2'
