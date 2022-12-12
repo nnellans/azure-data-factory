@@ -1,5 +1,5 @@
 trigger: 'none' # disable CI trigger
-pr: 'none'      # disable PR trigger
+pr: 'none' # disable PR trigger
 
 pool:
   vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
@@ -17,64 +17,54 @@ parameters:
   type: 'string'
   values:
   - 'all-in-one' # for a deployment of the all-in-one ARM Template
-  - 'linked'     # for a deployment of the Linked ARM Templates
+  - 'linked' # for a deployment of the Linked ARM Templates
   default: 'standard' 
 
 variables:
   azureServiceConnection: 'test-ado-serviceconnection' # Azure DevOps Service Connection for Azure
-  sourceAdf: 'adf-test-nn'                             # name of the source Azure Data Factory instance
-  sourceAdfPublishBranch: 'adf_publish'
-  destAdf: 'adf-test-new-nn'                           # name of the destination Azure Data Factory instance
-  destAdfRg: 'adf-test-new'                            # Resource Group for the destination Azure Data Factory instance
-  linkedTemplatesStorage: 'adftestnn'                  # name of the Storage Account to hold the ARM Linked Templates
-  linkedTemplatesStorageContainer: 'linkedtemplates'   # name of the Container to use on the Storage Account, will be automatically created if it doesn't exist
+  sourceAdf: 'adf-test-nn' # name of the source Azure Data Factory instance
+  sourceAdfPublishBranch: 'adf_publish' # name of the 'publish' branch used by the source Azure Data Factory
+  destAdf: 'adf-test-new-nn' # name of the destination Azure Data Factory instance
+  destAdfRg: 'adf-test-new' # name of the resource group for the destination Azure Data Factory instance
+  linkedTemplatesStorage: 'adftestnn' # name of the Storage Account to hold the ARM Linked Templates
+  linkedTemplatesStorageContainer: 'linkedtemplates' # name of the Container to use on the Storage Account, will be automatically created if it doesn't exist
 
 resources:
   repositories:
   - repository: 'adfTemplates'
     type: 'github'
-    name: 'nnellans/azure-data-factory'
+    name: 'nnellans/azure-data-factory' # github repo information, cannot use variables
     ref: $(sourceAdfPublishBranch)
-    endpoint: 'nnellans' # Azure DevOps Service Connection for GitHub
+    endpoint: 'nnellans' # Azure DevOps Service Connection for GitHub, cannot use variables
 
 steps:
 
-- checkout: 'adfTemplates'
+- checkout: 'adfTemplates' # check out the 'publish' branch as defined above
 
 #------------------------------------
-# If using the all-in-one Template
+# All-in-one Template
 #------------------------------------
 
-# perform a what-if deployment
+# perform a what-if deployment for the all-in-one template
 - task: 'AzureCLI@2'
-  displayName: 'What-If Deployment for All-in-one Templates'
-  condition: |
-    and(
-      succeeded(),
-      eq('${{ parameters.deployType }}', 'whatif'),
-      eq('${{ parameters.deployTemplate }}', 'all-in-one')
-    )
+  displayName: 'What-If Deployment for All-in-one Template'
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'whatif'), eq('${{ parameters.deployTemplate }}', 'all-in-one') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
-    scriptArguments: ''
     inlineScript: |
-      az deployment group create --what-if `
+      az deployment group create `
+        --what-if `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
         --parameters factoryName=$(destAdf)
 
-# perform a standard deployment
+# perform a standard deployment for the all-in-one template
 - task: 'AzureCLI@2'
-  displayName: 'Standard Deployment for All-in-one Templates'
-  condition: |
-    and(
-      succeeded(),
-      eq('${{ parameters.deployType }}', 'standard'),
-      eq('${{ parameters.deployTemplate }}', 'all-in-one')
-    )
+  displayName: 'Standard Deployment for All-in-one Template'
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'standard'), eq('${{ parameters.deployTemplate }}', 'all-in-one') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
@@ -88,43 +78,35 @@ steps:
         --parameters factoryName=$(destAdf)
 
 #------------------------------------
-# If using the Linked Templates
+# Linked Templates
 #------------------------------------
 
 # copy the ARM Linked Templates from the ADF repo to Azure Storage
 - task: 'AzureFileCopy@5'
-  name: 'AzureFileCopy'
+  name: 'AzureFileCopy' # the task needs a name so that we can reference the output variables later
   displayName: 'Copy Linked Templates to Azure Storage'
-  condition: |
-    and(
-      succeeded(),
-      eq('${{ parameters.deployTemplate }}', 'linked')
-    )
+  condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
-    SourcePath: '$(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/*.json'
+    SourcePath: '$(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_*.json'
     Destination: 'AzureBlob'
     storage: $(linkedTemplatesStorage)
     ContainerName: $(linkedTemplatesStorageContainer)
-    CleanTargetBeforeCopy: true   # default is false
+    CleanTargetBeforeCopy: true # default is false
     sasTokenTimeoutInMinutes: 120 # default is 240
 
-# perform a what-if deployment
+# perform a what-if deployment for the linked templates
 - task: 'AzureCLI@2'
   displayName: 'What-If Deployment for Linked Templates'
-  condition: |
-    and(
-      succeeded(),
-      eq('${{ parameters.deployType }}', 'whatif'),
-      eq('${{ parameters.deployTemplate }}', 'linked')
-    )
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'whatif'), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
       $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "linkedtemplates/", "linkedtemplates"
-      az deployment group create --what-if `
+      az deployment group create `
+        --what-if `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json `
@@ -132,15 +114,10 @@ steps:
         --parameters '"containerSasToken=$(AzureFileCopy.StorageContainerSasToken)"' `
         --parameters factoryName=$(destAdf)
 
-# perform a standard deployment
+# perform a standard deployment for the linked templates
 - task: 'AzureCLI@2'
   displayName: 'Standard Deployment for Linked Templates'
-  condition: |
-    and(
-      succeeded(),
-      eq('${{ parameters.deployType }}', 'standard'),
-      eq('${{ parameters.deployTemplate }}', 'linked')
-    )
+  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'standard'), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
