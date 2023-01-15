@@ -99,19 +99,20 @@ steps:
 - task: 'AzureCLI@2'
   displayName: 'What-If Deployment for Linked Templates'
   condition: and( succeeded(), eq('${{ parameters.deployType }}', 'whatif'), eq('${{ parameters.deployTemplate }}', 'linked') )
-  variables:
-    fixedURI: $[ replace(variables['AzureFileCopy.StorageContainerUri'], 'variables['linkedTemplatesStorageContainer']/', variables['linkedTemplatesStorageContainer']) ]
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
+      # remove the trailing / from the Uri
+      $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "$(linkedTemplatesStorageContainer)/", "$(linkedTemplatesStorageContainer)"
+      
       az deployment group create `
         --what-if `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
         --parameters '"$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json"' `
-        --parameters '"containerUri=$(fixedURI)"' `
+        --parameters '"containerUri=$fixedURI"' `
         --parameters '"containerSasToken=$(AzureFileCopy.StorageContainerSasToken)"' `
         --parameters '"factoryName=$(destAdf)"'
 
@@ -124,7 +125,9 @@ steps:
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
+      # remove the trailing / from the uri
       $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "$(linkedTemplatesStorageContainer)/", "$(linkedTemplatesStorageContainer)"
+      
       az deployment group create `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
