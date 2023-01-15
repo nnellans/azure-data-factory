@@ -1,9 +1,6 @@
 trigger: 'none' # disable CI trigger
 pr: 'none' # disable PR trigger
 
-pool:
-  vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
-
 parameters:
 - name: 'deployType'
   displayName: 'Type of Deployment to use'
@@ -36,6 +33,9 @@ resources:
     name: 'nnellans/azure-data-factory' # github repo information, cannot use variables
     ref: $(sourceAdfPublishBranch)
     endpoint: 'nnellans' # Azure DevOps Service Connection for GitHub, cannot use variables
+
+pool:
+  vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
 
 steps:
 
@@ -99,18 +99,19 @@ steps:
 - task: 'AzureCLI@2'
   displayName: 'What-If Deployment for Linked Templates'
   condition: and( succeeded(), eq('${{ parameters.deployType }}', 'whatif'), eq('${{ parameters.deployTemplate }}', 'linked') )
+  variables:
+    fixedURI: $[ replace(variables['AzureFileCopy.StorageContainerUri'], 'variables['linkedTemplatesStorageContainer']/', variables['linkedTemplatesStorageContainer']) ]
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "$(linkedTemplatesStorageContainer)/", "$(linkedTemplatesStorageContainer)"
       az deployment group create `
         --what-if `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
         --parameters '"$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json"' `
-        --parameters '"containerUri=$fixedURI"' `
+        --parameters '"containerUri=$(fixedURI)"' `
         --parameters '"containerSasToken=$(AzureFileCopy.StorageContainerSasToken)"' `
         --parameters '"factoryName=$(destAdf)"'
 
