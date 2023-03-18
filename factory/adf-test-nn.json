@@ -1,9 +1,0 @@
-{
-	"name": "adf-test-nn",
-	"location": "eastus",
-	"identity": {
-		"type": "SystemAssigned",
-		"principalId": "67920025-b0cc-40a6-aa2e-68532bf08be4",
-		"tenantId": "c6e9d28b-e0b1-4e42-b9fd-a6da9a831274"
-	}
-}
