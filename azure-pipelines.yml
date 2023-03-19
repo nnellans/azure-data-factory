@@ -50,7 +50,7 @@ steps:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
-    ${{ if eq('${{ parameters.whatIf }}', 'true'):
+    ${{ if eq('${{ parameters.whatIf }}', 'true') }}:
       arguments: '--what-if'
     inlineScript: |
       az deployment group create `
@@ -86,7 +86,7 @@ steps:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
-    ${{ if eq('${{ parameters.whatIf }}', 'true'):
+    ${{ if eq('${{ parameters.whatIf }}', 'true') }}:
       arguments: '--what-if'
     inlineScript: |
       # remove the trailing '/' from the Uri
