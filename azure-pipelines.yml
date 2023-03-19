@@ -51,8 +51,7 @@ steps:
     scriptLocation: 'inlineScript'
     ${{ if eq('${{ parameters.whatIf }}', 'true') }}:
       inlineScript: |
-        az deployment group create `
-          --what-if `
+        az deployment group what-if `
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
           --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
@@ -94,8 +93,7 @@ steps:
         # remove the trailing '/' from the Uri
         $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "$(linkedTemplatesStorageContainer)/", "$(linkedTemplatesStorageContainer)"
         
-        az deployment group create `
-          --what-if `
+        az deployment group what-if `
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
           --parameters "$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
