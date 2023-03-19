@@ -20,6 +20,8 @@ variables:
   sourceAdf: 'adf-test-nn' # name of the source Azure Data Factory instance
   destAdfRg: 'adf-test-new' # name of the resource group for the destination Azure Data Factory instance
   destAdf: 'adf-test-new-nn' # name of the destination Azure Data Factory instance
+  destAdfParams:
+    --parameters factoryName='$(destAdf)'
   ${{ if eq('${{ parameters.deployTemplate }}', 'linked') }}:
     linkedTemplatesStorage: 'adftestnn' # name of the Storage Account to hold the ARM Linked Templates
     linkedTemplatesStorageContainer: 'linkedtemplates' # name of the Container to use on the Storage Account, will be automatically created if it doesn't exist
@@ -71,14 +73,14 @@ steps:
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
           --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
-          --parameters factoryName=$(destAdf)
+          $(destAdfParams)
     ${{ else }}:
       inlineScript: |
         az deployment group create `
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
           --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
-          --parameters factoryName=$(destAdf)
+          $(destAdfParams)
 
 #------------------------------------
 # Linked Templates Deployment
@@ -112,9 +114,8 @@ steps:
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
           --parameters "$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
-          --parameters '"containerUri=$fixedURI"' `
-          --parameters '"containerSasToken=$(AzureFileCopy.StorageContainerSasToken)"' `
-          --parameters "factoryName=$(destAdf)"
+          --parameters containerUri='$fixedURI' containerSasToken='$(AzureFileCopy.StorageContainerSasToken)' `
+          $(destAdfParams)
     ${{ else }}:
       inlineScript: |
         # remove the trailing '/' from the Uri
@@ -124,9 +125,8 @@ steps:
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
           --parameters "$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
-          --parameters '"containerUri=$fixedURI"' `
-          --parameters '"containerSasToken=$(AzureFileCopy.StorageContainerSasToken)"' `
-          --parameters "factoryName=$(destAdf)"
+          --parameters containerUri='$fixedURI' containerSasToken='$(AzureFileCopy.StorageContainerSasToken)' `
+          $(destAdfParams)
 
 #------------------------------------
 
