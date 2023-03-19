@@ -16,6 +16,7 @@ parameters:
 
 variables:
   azureServiceConnection: 'test-ado-serviceconnection' # Azure DevOps Service Connection for Azure
+  sourceAdfRg: 'adf-test' # name of the resource group for the source Azure Data Factory instance
   sourceAdf: 'adf-test-nn' # name of the source Azure Data Factory instance
   destAdfRg: 'adf-test-new' # name of the resource group for the destination Azure Data Factory instance
   destAdf: 'adf-test-new-nn' # name of the destination Azure Data Factory instance
@@ -37,6 +38,22 @@ resources:
 steps:
 
 - checkout: 'adfTemplates' # check out the 'publish' branch as defined above
+
+- task: AzurePowerShell@5
+  displayName: 'Run pre-deployment Script'
+  condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'true') )
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    pwsh: true
+    azurePowerShellVersion: 'LatestVersion'
+    ScriptType: 'FilePath'
+    ScriptPath: 'https://raw.githubusercontent.com/Azure/Azure-DataFactory/main/SamplesV2/ContinuousIntegrationAndDelivery/PrePostDeploymentScript.Ver2.ps1'
+    ScriptArguments:
+      -armTemplate "$(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json" `
+      -ResourceGroupName "$(sourceAdfRg)" `
+      -DataFactoryName "$(sourceAdf)" `
+      -predeployment $true `
+      -deleteDeployment $false
 
 #------------------------------------
 # Standard Template Deployment
@@ -110,3 +127,21 @@ steps:
           --parameters '"containerUri=$fixedURI"' `
           --parameters '"containerSasToken=$(AzureFileCopy.StorageContainerSasToken)"' `
           --parameters "factoryName=$(destAdf)"
+
+#------------------------------------
+
+- task: AzurePowerShell@5
+  displayName: 'Run post-deployment Script'
+  condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'true') )
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    pwsh: true
+    azurePowerShellVersion: 'LatestVersion'
+    ScriptType: 'FilePath'
+    ScriptPath: 'https://raw.githubusercontent.com/Azure/Azure-DataFactory/main/SamplesV2/ContinuousIntegrationAndDelivery/PrePostDeploymentScript.Ver2.ps1'
+    ScriptArguments:
+      -armTemplate "$(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json" `
+      -ResourceGroupName "$(sourceAdfRg)" `
+      -DataFactoryName "$(sourceAdf)" `
+      -predeployment $false `
+      -deleteDeployment $true
