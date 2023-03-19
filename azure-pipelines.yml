@@ -17,11 +17,11 @@ parameters:
 variables:
   azureServiceConnection: 'test-ado-serviceconnection' # Azure DevOps Service Connection for Azure
   sourceAdf: 'adf-test-nn' # name of the source Azure Data Factory instance
-  sourceAdfPublishBranch: 'adf_publish' # name of the 'publish' branch used by the source Azure Data Factory
-  destAdf: 'adf-test-new-nn' # name of the destination Azure Data Factory instance
   destAdfRg: 'adf-test-new' # name of the resource group for the destination Azure Data Factory instance
-  linkedTemplatesStorage: 'adftestnn' # name of the Storage Account to hold the ARM Linked Templates
-  linkedTemplatesStorageContainer: 'linkedtemplates' # name of the Container to use on the Storage Account, will be automatically created if it doesn't exist
+  destAdf: 'adf-test-new-nn' # name of the destination Azure Data Factory instance
+  ${{ if eq('${{ parameters.deployTemplate }}', 'linked') }}:
+    linkedTemplatesStorage: 'adftestnn' # name of the Storage Account to hold the ARM Linked Templates
+    linkedTemplatesStorageContainer: 'linkedtemplates' # name of the Container to use on the Storage Account, will be automatically created if it doesn't exist
 
 pool:
   vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
@@ -30,8 +30,8 @@ resources:
   repositories:
   - repository: 'adfTemplates'
     type: 'github'
-    name: 'nnellans/azure-data-factory' # github repo information, cannot use variables
-    ref: $(sourceAdfPublishBranch)
+    name: 'nnellans/azure-data-factory' # github repo information where publish branch is, cannot use variables
+    ref: 'adf_publish' # name of the publish branch
     endpoint: 'nnellans' # Azure DevOps Service Connection for GitHub, cannot use variables
 
 steps:
@@ -39,9 +39,8 @@ steps:
 - checkout: 'adfTemplates' # check out the 'publish' branch as defined above
 
 #------------------------------------
-# Standard Template
+# Standard Template Deployment
 #------------------------------------
-
 - task: 'AzureCLI@2'
   displayName: 'Deployment of standard Template'
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'standard') )
@@ -65,16 +64,15 @@ steps:
           --parameters factoryName=$(destAdf)
 
 #------------------------------------
-# Linked Templates
+# Linked Templates Deployment
 #------------------------------------
-
 - task: 'AzureFileCopy@5'
   name: 'AzureFileCopy' # the task needs a name so that we can reference the output variables later
   displayName: 'Copy Linked Templates to Azure Storage'
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
-    SourcePath: '$(System.DefaultWorkingDirectory)/$(sourceAdf)/linkedTemplates/ArmTemplate_*.json'
+    SourcePath: '$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_*.json'
     Destination: 'AzureBlob'
     storage: $(linkedTemplatesStorage)
     ContainerName: $(linkedTemplatesStorageContainer)
