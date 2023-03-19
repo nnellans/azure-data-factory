@@ -2,13 +2,10 @@ trigger: 'none' # disable CI trigger
 pr: 'none' # disable PR trigger
 
 parameters:
-- name: 'deployType'
-  displayName: 'Type of Deployment to use'
-  type: 'string'
-  values:
-  - 'whatif'
-  - 'standard'
-  default: 'whatif'
+- name: 'whatIf'
+  displayName: 'What-If Deployment?'
+  type: 'boolean'
+  default: true
 - name: 'deployTemplate'
   displayName: 'Type of ARM Template to deploy'
   type: 'string'
@@ -45,37 +42,23 @@ steps:
 # All-in-one Template
 #------------------------------------
 
-# perform a what-if deployment for the all-in-one template
+# perform a deployment for the all-in-one template
 - task: 'AzureCLI@2'
-  displayName: 'What-If Deployment for All-in-one Template'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'whatif'), eq('${{ parameters.deployTemplate }}', 'all-in-one') )
+  displayName: 'Deployment for All-in-one Template'
+  condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'all-in-one') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
-    inlineScript: |
-      az deployment group create `
-        --what-if `
-        --resource-group $(destAdfRg) `
-        --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
-        --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
-        --parameters factoryName=$(destAdf)
-
-# perform a standard deployment for the all-in-one template
-- task: 'AzureCLI@2'
-  displayName: 'Standard Deployment for All-in-one Template'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'standard'), eq('${{ parameters.deployTemplate }}', 'all-in-one') )
-  inputs:
-    azureSubscription: $(azureServiceConnection)
-    scriptType: 'pscore'
-    scriptLocation: 'inlineScript'
-    scriptArguments: ''
+    ${{ if eq('${{ parameters.whatIf }}', 'true'):
+      arguments: '--what-if'
     inlineScript: |
       az deployment group create `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
         --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
-        --parameters factoryName=$(destAdf)
+        --parameters factoryName=$(destAdf) `
+        $1
 
 #------------------------------------
 # Linked Templates
@@ -95,43 +78,25 @@ steps:
     CleanTargetBeforeCopy: true # default is false
     sasTokenTimeoutInMinutes: 120 # default is 240
 
-# perform a what-if deployment for the linked templates
+# perform a deployment for the linked templates
 - task: 'AzureCLI@2'
   displayName: 'What-If Deployment for Linked Templates'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'whatif'), eq('${{ parameters.deployTemplate }}', 'linked') )
+  condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
+    ${{ if eq('${{ parameters.whatIf }}', 'true'):
+      arguments: '--what-if'
     inlineScript: |
-      # remove the trailing / from the Uri
-      $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "$(linkedTemplatesStorageContainer)/", "$(linkedTemplatesStorageContainer)"
-      
-      az deployment group create `
-        --what-if `
-        --resource-group $(destAdfRg) `
-        --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
-        --parameters '"$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json"' `
-        --parameters '"containerUri=$fixedURI"' `
-        --parameters '"containerSasToken=$(AzureFileCopy.StorageContainerSasToken)"' `
-        --parameters '"factoryName=$(destAdf)"'
-
-# perform a standard deployment for the linked templates
-- task: 'AzureCLI@2'
-  displayName: 'Standard Deployment for Linked Templates'
-  condition: and( succeeded(), eq('${{ parameters.deployType }}', 'standard'), eq('${{ parameters.deployTemplate }}', 'linked') )
-  inputs:
-    azureSubscription: $(azureServiceConnection)
-    scriptType: 'pscore'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      # remove the trailing / from the uri
+      # remove the trailing '/' from the Uri
       $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "$(linkedTemplatesStorageContainer)/", "$(linkedTemplatesStorageContainer)"
       
       az deployment group create `
         --resource-group $(destAdfRg) `
         --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
-        --parameters '"$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json"' `
+        --parameters "$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
         --parameters '"containerUri=$fixedURI"' `
         --parameters '"containerSasToken=$(AzureFileCopy.StorageContainerSasToken)"' `
-        --parameters '"factoryName=$(destAdf)"'
+        --parameters "factoryName=$(destAdf)" `
+        $1
