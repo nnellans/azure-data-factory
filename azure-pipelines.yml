@@ -10,8 +10,8 @@ parameters:
   displayName: 'Type of ARM Template to deploy'
   type: 'string'
   values:
-  - 'all-in-one' # for a deployment of the all-in-one ARM Template
-  - 'linked' # for a deployment of the Linked ARM Templates
+  - 'standard'
+  - 'linked'
   default: 'standard' 
 
 variables:
@@ -23,6 +23,9 @@ variables:
   linkedTemplatesStorage: 'adftestnn' # name of the Storage Account to hold the ARM Linked Templates
   linkedTemplatesStorageContainer: 'linkedtemplates' # name of the Container to use on the Storage Account, will be automatically created if it doesn't exist
 
+pool:
+  vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
+
 resources:
   repositories:
   - repository: 'adfTemplates'
@@ -31,21 +34,17 @@ resources:
     ref: $(sourceAdfPublishBranch)
     endpoint: 'nnellans' # Azure DevOps Service Connection for GitHub, cannot use variables
 
-pool:
-  vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
-
 steps:
 
 - checkout: 'adfTemplates' # check out the 'publish' branch as defined above
 
 #------------------------------------
-# All-in-one Template
+# Standard Template
 #------------------------------------
 
-# perform a deployment for the all-in-one template
 - task: 'AzureCLI@2'
-  displayName: 'Deployment for All-in-one Template'
-  condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'all-in-one') )
+  displayName: 'Deployment of standard Template'
+  condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'standard') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
@@ -70,7 +69,6 @@ steps:
 # Linked Templates
 #------------------------------------
 
-# copy the ARM Linked Templates from the ADF repo to Azure Storage
 - task: 'AzureFileCopy@5'
   name: 'AzureFileCopy' # the task needs a name so that we can reference the output variables later
   displayName: 'Copy Linked Templates to Azure Storage'
@@ -84,9 +82,8 @@ steps:
     CleanTargetBeforeCopy: true # default is false
     sasTokenTimeoutInMinutes: 120 # default is 240
 
-# perform a deployment for the linked templates
 - task: 'AzureCLI@2'
-  displayName: 'What-If Deployment for Linked Templates'
+  displayName: 'Deployment of Linked Templates'
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
