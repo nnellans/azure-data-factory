@@ -3,7 +3,7 @@ pr: 'none' # disable PR trigger
 
 parameters:
 - name: 'whatIf'
-  displayName: 'What-If Deployment?'
+  displayName: 'Run a What-If Deployment?'
   type: 'boolean'
   default: true
 - name: 'deployTemplate'
@@ -20,8 +20,8 @@ variables:
   sourceAdf: 'adf-test-nn' # name of the source Azure Data Factory instance
   destAdfRg: 'adf-test-new' # name of the resource group for the destination Azure Data Factory instance
   destAdf: 'adf-test-new-nn' # name of the destination Azure Data Factory instance
-  destAdfParams:
-    --parameters factoryName='$(destAdf)'
+  destAdfParams: >-
+    factoryName='$(destAdf)'
   ${{ if eq('${{ parameters.deployTemplate }}', 'linked') }}:
     linkedTemplatesStorage: 'adftestnn' # name of the Storage Account to hold the ARM Linked Templates
     linkedTemplatesStorageContainer: 'linkedtemplates' # name of the Container to use on the Storage Account, will be automatically created if it doesn't exist
@@ -50,11 +50,11 @@ steps:
     azurePowerShellVersion: 'LatestVersion'
     ScriptType: 'FilePath'
     ScriptPath: 'https://raw.githubusercontent.com/Azure/Azure-DataFactory/main/SamplesV2/ContinuousIntegrationAndDelivery/PrePostDeploymentScript.Ver2.ps1'
-    ScriptArguments:
-      -armTemplate "$(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json" `
-      -ResourceGroupName "$(sourceAdfRg)" `
-      -DataFactoryName "$(sourceAdf)" `
-      -predeployment $true `
+    ScriptArguments: >-
+      -armTemplate "$(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json"
+      -ResourceGroupName "$(sourceAdfRg)"
+      -DataFactoryName "$(sourceAdf)"
+      -predeployment $true
       -deleteDeployment $false
 
 #------------------------------------
@@ -73,14 +73,14 @@ steps:
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
           --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
-          $(destAdfParams)
+          --parameters $(destAdfParams)
     ${{ else }}:
       inlineScript: |
         az deployment group create `
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
           --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
-          $(destAdfParams)
+          --parameters $(destAdfParams)
 
 #------------------------------------
 # Linked Templates Deployment
@@ -114,8 +114,7 @@ steps:
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
           --parameters "$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
-          --parameters containerUri='$fixedURI' containerSasToken='$(AzureFileCopy.StorageContainerSasToken)' `
-          $(destAdfParams)
+          --parameters $(destAdfParams) containerUri='$fixedURI' containerSasToken='$(AzureFileCopy.StorageContainerSasToken)'
     ${{ else }}:
       inlineScript: |
         # remove the trailing '/' from the Uri
@@ -125,8 +124,7 @@ steps:
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
           --parameters "$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
-          --parameters containerUri='$fixedURI' containerSasToken='$(AzureFileCopy.StorageContainerSasToken)' `
-          $(destAdfParams)
+          --parameters $(destAdfParams) containerUri='$fixedURI' containerSasToken='$(AzureFileCopy.StorageContainerSasToken)'
 
 #------------------------------------
 
@@ -139,9 +137,9 @@ steps:
     azurePowerShellVersion: 'LatestVersion'
     ScriptType: 'FilePath'
     ScriptPath: 'https://raw.githubusercontent.com/Azure/Azure-DataFactory/main/SamplesV2/ContinuousIntegrationAndDelivery/PrePostDeploymentScript.Ver2.ps1'
-    ScriptArguments:
-      -armTemplate "$(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json" `
-      -ResourceGroupName "$(sourceAdfRg)" `
-      -DataFactoryName "$(sourceAdf)" `
-      -predeployment $false `
+    ScriptArguments: >-
+      -armTemplate "$(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json"
+      -ResourceGroupName "$(sourceAdfRg)"
+      -DataFactoryName "$(sourceAdf)"
+      -predeployment $false
       -deleteDeployment $true
