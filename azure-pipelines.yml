@@ -15,7 +15,7 @@ parameters:
   default: 'standard' 
 
 variables:
-  azureServiceConnection: 'test-ado-serviceconnection' # Azure DevOps 'Service Connection' of type Azure
+  azureServiceConnection: 'test-ado-serviceconnection' # Azure DevOps 'Service Connection' of type Azure Resource Manager
   
   sourceAdfRg: 'adf-test' # name of the resource group for the source ADF instance
   sourceAdf: 'adf-test-nn' # name of the source ADF instance
@@ -26,7 +26,7 @@ variables:
   destAdfParams: >-
     factoryName='$(destAdf)'
   
-  ${{ if eq('${{ parameters.deployTemplate }}', 'linked') }}:
+  ${{ if eq(parameters.deployTemplate, 'linked') }}:
     linkedTemplatesStorage: 'adftestnn' # name of the Storage Account to hold the Linked ARM Templates
     linkedTemplatesStorageContainer: 'linkedtemplates' # name of the Container in the Storage Account, will be automatically created if it doesn't exist
 
@@ -66,7 +66,7 @@ steps:
       -deleteDeployment $false
 
 #------------------------------------
-# Standard Template Deployment
+# Deploy Standard ARM Template
 #------------------------------------
 - task: 'AzureCLI@2'
   displayName: 'Deployment of standard Template'
@@ -91,7 +91,7 @@ steps:
           --parameters $(destAdfParams)
 
 #------------------------------------
-# Linked Templates Deployment
+# Deploy Linked ARM Templates
 #------------------------------------
 - task: 'AzureFileCopy@5'
   name: 'AzureFileCopy' # the task needs a name so that we can reference the output variables later
