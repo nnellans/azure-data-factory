@@ -44,9 +44,9 @@ resources:
 steps:
 
 - checkout: 'self'
-  path: $(System.DefaultWorkingDirectory)\self
+  path: s\self
 - checkout: 'adfTemplates' # check out the repo & branch as defined above
-  path: $(System.DefaultWorkingDirectory)\adfTemplates
+  path: s\adfTemplates
 
 - task: AzurePowerShell@5
   displayName: 'Run pre-deployment Script'
