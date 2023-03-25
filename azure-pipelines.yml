@@ -69,7 +69,7 @@ steps:
 # Deploy Standard ARM Template
 #------------------------------------
 - task: AzureCLI@2
-  displayName: Deployment of standard Template
+  displayName: Deploy Standard ARM Template
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'standard') )
   inputs:
     azureSubscription: $(azureServiceConnection)
@@ -95,7 +95,7 @@ steps:
 #------------------------------------
 - task: AzureFileCopy@5
   name: AzureFileCopy # the task needs a name so that we can reference the output variables later
-  displayName: Copy Linked Templates to Azure Storage
+  displayName: Copy Linked ARM Templates to Azure Storage
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
@@ -107,7 +107,7 @@ steps:
     sasTokenTimeoutInMinutes: 120 # default is 240
 
 - task: 'AzureCLI@2'
-  displayName: Deployment of Linked Templates
+  displayName: Deploy Linked ARM Templates
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
