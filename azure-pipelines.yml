@@ -43,7 +43,7 @@ steps:
 
 - task: AzurePowerShell@5
   displayName: 'Run pre-deployment Script'
-  condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'true') )
+  condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'false') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     pwsh: true
@@ -130,7 +130,7 @@ steps:
 
 - task: AzurePowerShell@5
   displayName: 'Run post-deployment Script'
-  condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'true') )
+  condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'false') )
   inputs:
     azureSubscription: $(azureServiceConnection)
     pwsh: true
