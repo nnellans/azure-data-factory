@@ -17,6 +17,7 @@ parameters:
   - linked
   default: standard
 
+#!! UPDATE THESE TO MATCH YOUR ENVIRONMENT
 variables:
   azureServiceConnection: '' # Azure DevOps 'Service Connection' of type Azure Resource Manager
   
@@ -40,6 +41,7 @@ pool:
 
 resources:
   repositories:
+  #!! UPDATE THIS TO MATCH YOUR ENVIRONMENT
   - repository: adfTemplates
     type: github
     name: nnellans/azure-data-factory # github repo where the adf_publish branch is located
