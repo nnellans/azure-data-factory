@@ -25,6 +25,7 @@ variables:
   # Override parameters for the destination ADF instance
   destAdfParams: >-
     factoryName=$(destAdf)
+    ls_AzureKeyVault1_properties_typeProperties_baseUrl=https://adftestnnnew.vault.azure.net/
   
   ${{ if eq(parameters.deployTemplate, 'linked') }}:
     linkedTemplatesStorage: adftestnn # name of the Storage Account to hold the Linked ARM Templates
