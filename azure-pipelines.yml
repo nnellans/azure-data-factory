@@ -71,7 +71,7 @@ steps:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
-    ${{ if eq('${{ parameters.whatIf }}', 'true') }}:
+    ${{ if eq(parameters.whatIf, true) }}:
       inlineScript: |
         az deployment group what-if `
           --resource-group $(destAdfRg) `
@@ -109,7 +109,7 @@ steps:
     azureSubscription: $(azureServiceConnection)
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
-    ${{ if eq('${{ parameters.whatIf }}', 'true') }}:
+    ${{ if eq(parameters.whatIf, true) }}:
       inlineScript: |
         # remove the trailing '/' from the Uri
         $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "$(linkedTemplatesStorageContainer)/", "$(linkedTemplatesStorageContainer)"
