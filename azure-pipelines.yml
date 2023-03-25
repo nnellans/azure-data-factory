@@ -15,16 +15,20 @@ parameters:
   default: 'standard' 
 
 variables:
-  azureServiceConnection: 'test-ado-serviceconnection' # Azure DevOps Service Connection for Azure
-  sourceAdfRg: 'adf-test' # name of the resource group for the source Azure Data Factory instance
-  sourceAdf: 'adf-test-nn' # name of the source Azure Data Factory instance
-  destAdfRg: 'adf-test-new' # name of the resource group for the destination Azure Data Factory instance
-  destAdf: 'adf-test-new-nn' # name of the destination Azure Data Factory instance
+  azureServiceConnection: 'test-ado-serviceconnection' # Azure DevOps 'Service Connection' of type Azure
+  
+  sourceAdfRg: 'adf-test' # name of the resource group for the source ADF instance
+  sourceAdf: 'adf-test-nn' # name of the source ADF instance
+  
+  destAdfRg: 'adf-test-new' # name of the resource group for the destination ADF instance
+  destAdf: 'adf-test-new-nn' # name of the destination ADF instance
+  # Override parameters for the destination ADF instance
   destAdfParams: >-
     factoryName='$(destAdf)'
+  
   ${{ if eq('${{ parameters.deployTemplate }}', 'linked') }}:
-    linkedTemplatesStorage: 'adftestnn' # name of the Storage Account to hold the ARM Linked Templates
-    linkedTemplatesStorageContainer: 'linkedtemplates' # name of the Container to use on the Storage Account, will be automatically created if it doesn't exist
+    linkedTemplatesStorage: 'adftestnn' # name of the Storage Account to hold the Linked ARM Templates
+    linkedTemplatesStorageContainer: 'linkedtemplates' # name of the Container in the Storage Account, will be automatically created if it doesn't exist
 
 pool:
   vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
@@ -33,17 +37,17 @@ resources:
   repositories:
   - repository: 'adfTemplates'
     type: 'github'
-    name: 'nnellans/azure-data-factory' # github repo information where publish branch is, cannot use variables
+    name: 'nnellans/azure-data-factory' # github repo where the adf_publish branch is located
     ref: 'adf_publish' # name of the publish branch
-    endpoint: 'nnellans' # Azure DevOps Service Connection for GitHub, cannot use variables
+    endpoint: 'nnellans' # Azure DevOps 'Service Connection' of type GitHub
 
 steps:
 
-- checkout: 'adfTemplates' # check out the 'publish' branch as defined above
+- checkout: 'adfTemplates' # check out the repo & branch as defined above
 
 - task: AzurePowerShell@5
   displayName: 'Run pre-deployment Script'
-  condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'false') )
+  condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'false') ) # no need to run the script if doing what-if
   inputs:
     azureSubscription: $(azureServiceConnection)
     pwsh: true
@@ -130,7 +134,7 @@ steps:
 
 - task: AzurePowerShell@5
   displayName: 'Run post-deployment Script'
-  condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'false') )
+  condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'false') ) # no need to run the script if doing what-if
   inputs:
     azureSubscription: $(azureServiceConnection)
     pwsh: true
