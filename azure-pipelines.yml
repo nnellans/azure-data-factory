@@ -122,7 +122,7 @@ steps:
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
           --parameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
-          --parameters $(destAdfParams) containerUri="$fixedURI" containerSasToken="$(AzureFileCopy.StorageContainerSasToken)"
+          --parameters $(destAdfParams) containerUri='"$fixedURI"' containerSasToken='"$(AzureFileCopy.StorageContainerSasToken)"'
     ${{ else }}:
       inlineScript: |
         # remove the trailing '/' from the Uri
