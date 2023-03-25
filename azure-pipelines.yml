@@ -59,6 +59,7 @@ steps:
     ScriptPath: '$(System.DefaultWorkingDirectory)\self\PrePostDeploymentScript.Ver2.ps1'
     ScriptArguments: >-
       -armTemplate "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json"
+      -armTemplateParameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json"
       -ResourceGroupName "$(sourceAdfRg)"
       -DataFactoryName "$(sourceAdf)"
       -predeployment $true
@@ -146,6 +147,7 @@ steps:
     ScriptPath: '$(System.DefaultWorkingDirectory)\self\PrePostDeploymentScript.Ver2.ps1'
     ScriptArguments: >-
       -armTemplate "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json"
+      -armTemplateParameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json"
       -ResourceGroupName "$(sourceAdfRg)"
       -DataFactoryName "$(sourceAdf)"
       -predeployment $false
