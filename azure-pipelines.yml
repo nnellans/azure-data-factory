@@ -1,3 +1,6 @@
+# Example pipeline to do CI/CD for Azure Data Factory
+# Read more here:  https://www.nathannellans.com/post/ci-cd-with-azure-data-factory-part-2
+
 trigger: none # disable CI trigger
 pr: none # disable PR trigger
 
