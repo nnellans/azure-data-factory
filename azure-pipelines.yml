@@ -43,7 +43,10 @@ resources:
 
 steps:
 
+- checkout: 'self'
+  path: $(System.DefaultWorkingDirectory)\self
 - checkout: 'adfTemplates' # check out the repo & branch as defined above
+  path: $(System.DefaultWorkingDirectory)\adfTemplates
 
 - task: AzurePowerShell@5
   displayName: 'Run pre-deployment Script'
@@ -53,9 +56,9 @@ steps:
     pwsh: true
     azurePowerShellVersion: 'LatestVersion'
     ScriptType: 'FilePath'
-    ScriptPath: 'https://raw.githubusercontent.com/Azure/Azure-DataFactory/main/SamplesV2/ContinuousIntegrationAndDelivery/PrePostDeploymentScript.Ver2.ps1'
+    ScriptPath: '$(System.DefaultWorkingDirectory)\self\PrePostDeploymentScript.Ver2.ps1'
     ScriptArguments: >-
-      -armTemplate "$(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json"
+      -armTemplate "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json"
       -ResourceGroupName "$(sourceAdfRg)"
       -DataFactoryName "$(sourceAdf)"
       -predeployment $true
@@ -75,15 +78,15 @@ steps:
       inlineScript: |
         az deployment group what-if `
           --resource-group $(destAdfRg) `
-          --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
-          --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
+          --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json `
+          --parameters $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json `
           --parameters $(destAdfParams)
     ${{ else }}:
       inlineScript: |
         az deployment group create `
           --resource-group $(destAdfRg) `
-          --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json `
-          --parameters $(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateParametersForFactory.json `
+          --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json `
+          --parameters $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json `
           --parameters $(destAdfParams)
 
 #------------------------------------
@@ -95,7 +98,7 @@ steps:
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
-    SourcePath: '$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_*.json'
+    SourcePath: '$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_*.json'
     Destination: 'AzureBlob'
     storage: $(linkedTemplatesStorage)
     ContainerName: $(linkedTemplatesStorageContainer)
@@ -116,8 +119,8 @@ steps:
         
         az deployment group what-if `
           --resource-group $(destAdfRg) `
-          --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
-          --parameters "$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
+          --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
+          --parameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
           --parameters $(destAdfParams) containerUri='$fixedURI' containerSasToken='$(AzureFileCopy.StorageContainerSasToken)'
     ${{ else }}:
       inlineScript: |
@@ -126,8 +129,8 @@ steps:
         
         az deployment group create `
           --resource-group $(destAdfRg) `
-          --template-file $(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
-          --parameters "$(System.DefaultWorkingDirectory)\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
+          --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
+          --parameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
           --parameters $(destAdfParams) containerUri='$fixedURI' containerSasToken='$(AzureFileCopy.StorageContainerSasToken)'
 
 #------------------------------------
@@ -140,9 +143,9 @@ steps:
     pwsh: true
     azurePowerShellVersion: 'LatestVersion'
     ScriptType: 'FilePath'
-    ScriptPath: 'https://raw.githubusercontent.com/Azure/Azure-DataFactory/main/SamplesV2/ContinuousIntegrationAndDelivery/PrePostDeploymentScript.Ver2.ps1'
+    ScriptPath: '$(System.DefaultWorkingDirectory)\self\PrePostDeploymentScript.Ver2.ps1'
     ScriptArguments: >-
-      -armTemplate "$(System.DefaultWorkingDirectory)\$(sourceAdf)\ARMTemplateForFactory.json"
+      -armTemplate "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json"
       -ResourceGroupName "$(sourceAdfRg)"
       -DataFactoryName "$(sourceAdf)"
       -predeployment $false
