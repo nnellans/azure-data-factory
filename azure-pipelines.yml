@@ -118,7 +118,7 @@ steps:
         # remove the trailing '/' from the Uri
         $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "$(linkedTemplatesStorageContainer)/", "$(linkedTemplatesStorageContainer)"
         
-        Write-Output az deployment group what-if `
+        az deployment group what-if `
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
           --parameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
