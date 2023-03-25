@@ -1,0 +1,10 @@
+{
+	"name": "ls_AzureKeyVault1",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://adftestnn.vault.azure.net/"
+		}
+	}
+}
