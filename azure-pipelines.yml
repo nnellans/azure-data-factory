@@ -24,7 +24,7 @@ variables:
   destAdf: 'adf-test-new-nn' # name of the destination ADF instance
   # Override parameters for the destination ADF instance
   destAdfParams: >-
-    factoryName='$(destAdf)'
+    factoryName="$(destAdf)"
   
   ${{ if eq(parameters.deployTemplate, 'linked') }}:
     linkedTemplatesStorage: 'adftestnn' # name of the Storage Account to hold the Linked ARM Templates
@@ -122,7 +122,7 @@ steps:
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
           --parameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
-          --parameters $(destAdfParams) containerUri='$fixedURI' containerSasToken='$(AzureFileCopy.StorageContainerSasToken)'
+          --parameters $(destAdfParams) containerUri="$fixedURI" containerSasToken="$(AzureFileCopy.StorageContainerSasToken)"
     ${{ else }}:
       inlineScript: |
         # remove the trailing '/' from the Uri
@@ -132,7 +132,7 @@ steps:
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
           --parameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
-          --parameters $(destAdfParams) containerUri='$fixedURI' containerSasToken='$(AzureFileCopy.StorageContainerSasToken)'
+          --parameters $(destAdfParams) containerUri="$fixedURI" containerSasToken="$(AzureFileCopy.StorageContainerSasToken)"
 
 #------------------------------------
 
