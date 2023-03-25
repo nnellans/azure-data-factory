@@ -15,20 +15,21 @@ parameters:
   default: standard
 
 variables:
-  azureServiceConnection: test-ado-serviceconnection # Azure DevOps 'Service Connection' of type Azure Resource Manager
+  azureServiceConnection: '' # Azure DevOps 'Service Connection' of type Azure Resource Manager
   
-  sourceAdfRg: adf-test # name of the resource group for the source ADF instance
-  sourceAdf: adf-test-nn # name of the source ADF instance
+  sourceAdfRg: '' # name of the resource group for the source ADF instance
+  sourceAdf: '' # name of the source ADF instance
   
-  destAdfRg: adf-test-new # name of the resource group for the destination ADF instance
-  destAdf: adf-test-new-nn # name of the destination ADF instance
+  destAdfRg: '' # name of the resource group for the destination ADF instance
+  destAdf: '' # name of the destination ADF instance
   # Override parameters for the destination ADF instance
   destAdfParams: >-
     factoryName=$(destAdf)
-    ls_AzureKeyVault1_properties_typeProperties_baseUrl=https://adftestnnnew.vault.azure.net/
+    key=value
+    key=value
   
   ${{ if eq(parameters.deployTemplate, 'linked') }}:
-    linkedTemplatesStorage: adftestnn # name of the Storage Account to hold the Linked ARM Templates
+    linkedTemplatesStorage: '' # name of the Storage Account to hold the Linked ARM Templates
     linkedTemplatesStorageContainer: linkedtemplates # name of the Container in the Storage Account, will be automatically created if it doesn't exist
 
 pool:
@@ -40,7 +41,7 @@ resources:
     type: github
     name: nnellans/azure-data-factory # github repo where the adf_publish branch is located
     ref: adf_publish # name of the publish branch
-    endpoint: nnellans # Azure DevOps 'Service Connection' of type GitHub
+    endpoint: '' # Azure DevOps 'Service Connection' of type GitHub
 
 steps:
 
