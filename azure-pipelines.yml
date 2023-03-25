@@ -60,8 +60,8 @@ steps:
     ScriptArguments: >-
       -armTemplate "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json"
       -armTemplateParameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json"
-      -ResourceGroupName "$(sourceAdfRg)"
-      -DataFactoryName "$(sourceAdf)"
+      -ResourceGroupName "$(destAdfRg)"
+      -DataFactoryName "$(destAdf)"
       -predeployment $true
       -deleteDeployment $false
 
@@ -148,7 +148,7 @@ steps:
     ScriptArguments: >-
       -armTemplate "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json"
       -armTemplateParameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json"
-      -ResourceGroupName "$(sourceAdfRg)"
-      -DataFactoryName "$(sourceAdf)"
+      -ResourceGroupName "$(destAdfRg)"
+      -DataFactoryName "$(destAdf)"
       -predeployment $false
       -deleteDeployment $true
