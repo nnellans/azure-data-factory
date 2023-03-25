@@ -1,62 +1,62 @@
-trigger: 'none' # disable CI trigger
-pr: 'none' # disable PR trigger
+trigger: none # disable CI trigger
+pr: none # disable PR trigger
 
 parameters:
-- name: 'whatIf'
-  displayName: 'Run a What-If Deployment?'
-  type: 'boolean'
+- name: whatIf
+  displayName: Run a What-If Deployment?
+  type: boolean
   default: true
-- name: 'deployTemplate'
-  displayName: 'Type of ARM Template to deploy:'
-  type: 'string'
+- name: deployTemplate
+  displayName: Type of ARM Template to deploy:
+  type: string
   values:
-  - 'standard'
-  - 'linked'
-  default: 'standard' 
+  - standard
+  - linked
+  default: standard
 
 variables:
-  azureServiceConnection: 'test-ado-serviceconnection' # Azure DevOps 'Service Connection' of type Azure Resource Manager
+  azureServiceConnection: test-ado-serviceconnection # Azure DevOps 'Service Connection' of type Azure Resource Manager
   
-  sourceAdfRg: 'adf-test' # name of the resource group for the source ADF instance
-  sourceAdf: 'adf-test-nn' # name of the source ADF instance
+  sourceAdfRg: adf-test # name of the resource group for the source ADF instance
+  sourceAdf: adf-test-nn # name of the source ADF instance
   
-  destAdfRg: 'adf-test-new' # name of the resource group for the destination ADF instance
-  destAdf: 'adf-test-new-nn' # name of the destination ADF instance
+  destAdfRg: adf-test-new # name of the resource group for the destination ADF instance
+  destAdf: adf-test-new-nn # name of the destination ADF instance
   # Override parameters for the destination ADF instance
   destAdfParams: >-
-    factoryName="$(destAdf)"
+    factoryName=$(destAdf)
   
   ${{ if eq(parameters.deployTemplate, 'linked') }}:
-    linkedTemplatesStorage: 'adftestnn' # name of the Storage Account to hold the Linked ARM Templates
-    linkedTemplatesStorageContainer: 'linkedtemplates' # name of the Container in the Storage Account, will be automatically created if it doesn't exist
+    linkedTemplatesStorage: adftestnn # name of the Storage Account to hold the Linked ARM Templates
+    linkedTemplatesStorageContainer: linkedtemplates # name of the Container in the Storage Account, will be automatically created if it doesn't exist
 
 pool:
-  vmImage: 'windows-latest' # the AzureFileCopy task requires a Windows agent
+  vmImage: windows-latest # the AzureFileCopy task requires a Windows agent
 
 resources:
   repositories:
-  - repository: 'adfTemplates'
-    type: 'github'
-    name: 'nnellans/azure-data-factory' # github repo where the adf_publish branch is located
-    ref: 'adf_publish' # name of the publish branch
-    endpoint: 'nnellans' # Azure DevOps 'Service Connection' of type GitHub
+  - repository: adfTemplates
+    type: github
+    name: nnellans/azure-data-factory # github repo where the adf_publish branch is located
+    ref: adf_publish # name of the publish branch
+    endpoint: nnellans # Azure DevOps 'Service Connection' of type GitHub
 
 steps:
 
-- checkout: 'self'
+- checkout: self
   path: s\self
-- checkout: 'adfTemplates' # check out the repo & branch as defined above
+- checkout: adfTemplates # check out the repo & branch as defined above
   path: s\adfTemplates
 
 - task: AzurePowerShell@5
-  displayName: 'Run pre-deployment Script'
+  displayName: Run pre-deployment Script
   condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'false') ) # no need to run the script if doing what-if
   inputs:
     azureSubscription: $(azureServiceConnection)
     pwsh: true
-    azurePowerShellVersion: 'LatestVersion'
-    ScriptType: 'FilePath'
-    ScriptPath: '$(System.DefaultWorkingDirectory)\self\PrePostDeploymentScript.Ver2.ps1'
+    azurePowerShellVersion: LatestVersion
+    ScriptType: FilePath
+    ScriptPath: $(System.DefaultWorkingDirectory)\self\PrePostDeploymentScript.Ver2.ps1
     ScriptArguments: >-
       -armTemplate "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json"
       -armTemplateParameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json"
@@ -68,13 +68,13 @@ steps:
 #------------------------------------
 # Deploy Standard ARM Template
 #------------------------------------
-- task: 'AzureCLI@2'
-  displayName: 'Deployment of standard Template'
+- task: AzureCLI@2
+  displayName: Deployment of standard Template
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'standard') )
   inputs:
     azureSubscription: $(azureServiceConnection)
-    scriptType: 'pscore'
-    scriptLocation: 'inlineScript'
+    scriptType: pscore
+    scriptLocation: inlineScript
     ${{ if eq(parameters.whatIf, true) }}:
       inlineScript: |
         az deployment group what-if `
@@ -93,26 +93,26 @@ steps:
 #------------------------------------
 # Deploy Linked ARM Templates
 #------------------------------------
-- task: 'AzureFileCopy@5'
-  name: 'AzureFileCopy' # the task needs a name so that we can reference the output variables later
-  displayName: 'Copy Linked Templates to Azure Storage'
+- task: AzureFileCopy@5
+  name: AzureFileCopy # the task needs a name so that we can reference the output variables later
+  displayName: Copy Linked Templates to Azure Storage
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
-    SourcePath: '$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_*.json'
-    Destination: 'AzureBlob'
+    SourcePath: $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_*.json
+    Destination: AzureBlob
     storage: $(linkedTemplatesStorage)
     ContainerName: $(linkedTemplatesStorageContainer)
     CleanTargetBeforeCopy: true # default is false
     sasTokenTimeoutInMinutes: 120 # default is 240
 
 - task: 'AzureCLI@2'
-  displayName: 'Deployment of Linked Templates'
+  displayName: Deployment of Linked Templates
   condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'linked') )
   inputs:
     azureSubscription: $(azureServiceConnection)
-    scriptType: 'pscore'
-    scriptLocation: 'inlineScript'
+    scriptType: pscore
+    scriptLocation: inlineScript
     ${{ if eq(parameters.whatIf, true) }}:
       inlineScript: |
         # remove the trailing '/' from the Uri
@@ -137,14 +137,14 @@ steps:
 #------------------------------------
 
 - task: AzurePowerShell@5
-  displayName: 'Run post-deployment Script'
+  displayName: Run post-deployment Script
   condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'false') ) # no need to run the script if doing what-if
   inputs:
     azureSubscription: $(azureServiceConnection)
     pwsh: true
-    azurePowerShellVersion: 'LatestVersion'
-    ScriptType: 'FilePath'
-    ScriptPath: '$(System.DefaultWorkingDirectory)\self\PrePostDeploymentScript.Ver2.ps1'
+    azurePowerShellVersion: LatestVersion
+    ScriptType: FilePath
+    ScriptPath: $(System.DefaultWorkingDirectory)\self\PrePostDeploymentScript.Ver2.ps1
     ScriptArguments: >-
       -armTemplate "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json"
       -armTemplateParameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json"
