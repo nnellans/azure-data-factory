@@ -7,7 +7,7 @@ parameters:
   type: boolean
   default: true
 - name: deployTemplate
-  displayName: Type of ARM Template to deploy:
+  displayName: Type of ARM Template to deploy
   type: string
   values:
   - standard
