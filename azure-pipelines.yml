@@ -20,8 +20,7 @@ parameters:
 #!! UPDATE THESE TO MATCH YOUR ENVIRONMENT
 variables:
   azureServiceConnection: '' # Azure DevOps 'Service Connection' of type Azure Resource Manager
-  
-  sourceAdfRg: '' # name of the resource group for the source ADF instance
+
   sourceAdf: '' # name of the source ADF instance
   
   destAdfRg: '' # name of the resource group for the destination ADF instance
@@ -31,13 +30,9 @@ variables:
     factoryName=$(destAdf)
     key=value
     key=value
-  
-  ${{ if eq(parameters.deployTemplate, 'linked') }}:
-    linkedTemplatesStorage: '' # name of the Storage Account to hold the Linked ARM Templates
-    linkedTemplatesStorageContainer: linkedtemplates # name of the Container in the Storage Account, will be automatically created if it doesn't exist
 
-pool:
-  vmImage: windows-latest # the AzureFileCopy task requires a Windows agent
+  linkedTemplatesStorage: '' # name of the Storage Account to hold the Linked ARM Templates
+  linkedTemplatesStorageContainer: linkedtemplates # name of the Container in the Storage Account, will be automatically created if it doesn't exist
 
 resources:
   repositories:
@@ -48,11 +43,14 @@ resources:
     ref: adf_publish # name of the publish branch
     endpoint: '' # Azure DevOps 'Service Connection' of type GitHub
 
+pool:
+  vmImage: windows-latest # the AzureFileCopy task requires a Windows agent
+
 steps:
 
 - checkout: self
   path: s\self
-- checkout: adfTemplates # check out the repo & branch as defined above
+- checkout: adfTemplates
   path: s\adfTemplates
 
 - task: AzurePowerShell@5
