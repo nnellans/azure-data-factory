@@ -31,6 +31,7 @@ variables:
     key=value
     key=value
 
+  # these 2 are only needed if using linked templates
   linkedTemplatesStorage: '' # name of the Storage Account to hold the Linked ARM Templates
   linkedTemplatesStorageContainer: linkedtemplates # name of the Container in the Storage Account, will be automatically created if it doesn't exist
 
@@ -48,8 +49,14 @@ pool:
 
 steps:
 
+# checks out the repo hosting the pipeline yaml file.  required so that we can access the pre/post PowerShell script
+# checks out to relative path 's\self\' so that we can access it via $(System.DefaultWorkingDirectory)\self
 - checkout: self
   path: s\self
+
+# checks out the adf_publish branch where the ADF arm templates are stored
+# the settings for this repo are defined above, in the 'resources' section
+# checks out to relative path 's\adfTemplates' so that we can access it via $(System.DefaultWorkingDirectory)\adfTemplates
 - checkout: adfTemplates
   path: s\adfTemplates
 
@@ -139,6 +146,8 @@ steps:
           --parameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
           --parameters $(destAdfParams) containerUri="$fixedURI" containerSasToken='"$(AzureFileCopy.StorageContainerSasToken)"'
 
+#------------------------------------
+# End Deploy
 #------------------------------------
 
 - task: AzurePowerShell@5
