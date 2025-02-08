@@ -5,24 +5,22 @@ trigger: none # disable CI trigger
 pr: none # disable PR trigger
 
 parameters:
-- name: whatIf
-  displayName: Run a What-If Deployment?
-  type: boolean
-  default: true
-- name: deployTemplate
-  displayName: Type of ARM Template to deploy
-  type: string
-  values:
-  - standard
-  - linked
-  default: standard
+  - name: whatIf
+    displayName: Run a What-If Deployment?
+    type: boolean
+    default: true
+  - name: deployTemplate
+    displayName: Type of ARM Template to deploy
+    type: string
+    values:
+      - standard
+      - linked
+    default: standard
 
 #!! UPDATE THESE TO MATCH YOUR ENVIRONMENT
 variables:
   azureServiceConnection: '' # Azure DevOps 'Service Connection' of type Azure Resource Manager
-
   sourceAdf: '' # name of the source ADF instance
-  
   destAdfRg: '' # name of the resource group for the destination ADF instance
   destAdf: '' # name of the destination ADF instance
   # Override parameters for the destination ADF instance
@@ -30,7 +28,6 @@ variables:
     factoryName=$(destAdf)
     key=value
     key=value
-
   # these 2 are only needed if using linked templates
   linkedTemplatesStorage: '' # name of the Storage Account to hold the Linked ARM Templates
   linkedTemplatesStorageContainer: linkedtemplates # name of the Container in the Storage Account, will be automatically created if it doesn't exist
@@ -49,54 +46,46 @@ pool:
 
 steps:
 
-# checks out the repo hosting the pipeline yaml file.  required so that we can access the pre/post PowerShell script
-# checks out to relative path 's\self\' so that we can access it via $(System.DefaultWorkingDirectory)\self
-- checkout: self
-  path: s\self
-
-# checks out the adf_publish branch where the ADF arm templates are stored
-# the settings for this repo are defined above, in the 'resources' section
-# checks out to relative path 's\adfTemplates' so that we can access it via $(System.DefaultWorkingDirectory)\adfTemplates
-- checkout: adfTemplates
-  path: s\adfTemplates
-
-- task: AzurePowerShell@5
-  displayName: Run pre-deployment Script
-  condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'false') ) # no need to run the script if doing what-if
-  inputs:
-    azureSubscription: $(azureServiceConnection)
-    pwsh: true
-    azurePowerShellVersion: LatestVersion
-    ScriptType: FilePath
-    ScriptPath: $(System.DefaultWorkingDirectory)\self\PrePostDeploymentScript.Ver2.ps1
-    ScriptArguments: >-
-      -armTemplate "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json"
-      -armTemplateParameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json"
-      -ResourceGroupName "$(destAdfRg)"
-      -DataFactoryName "$(destAdf)"
-      -predeployment $true
-      -deleteDeployment $false
-
-#------------------------------------
-# Deploy Standard ARM Template
-#------------------------------------
-- task: AzureCLI@2
-  displayName: Deploy Standard ARM Template
-  condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'standard') )
-  inputs:
-    azureSubscription: $(azureServiceConnection)
-    scriptType: pscore
-    scriptLocation: inlineScript
-    ${{ if eq(parameters.whatIf, true) }}:
+  # checks out the repo hosting the pipeline yaml file.  required so that we can access the pre/post PowerShell script
+  # checks out to relative path 's\self\' so that we can access it via $(System.DefaultWorkingDirectory)\self
+  - checkout: self
+    path: s\self
+  
+  # checks out the adf_publish branch where the ADF arm templates are stored
+  # the settings for this repo are defined above, in the 'resources' section
+  # checks out to relative path 's\adfTemplates' so that we can access it via $(System.DefaultWorkingDirectory)\adfTemplates
+  - checkout: adfTemplates
+    path: s\adfTemplates
+  
+  - task: AzurePowerShell@5
+    displayName: Run pre-deployment Script
+    condition: and( succeeded(), eq('${{ parameters.whatIf }}', 'false') ) # no need to run the script if doing what-if
+    inputs:
+      azureSubscription: $(azureServiceConnection)
+      pwsh: true
+      azurePowerShellVersion: LatestVersion
+      ScriptType: FilePath
+      ScriptPath: $(System.DefaultWorkingDirectory)\self\PrePostDeploymentScript.Ver2.ps1
+      ScriptArguments: >-
+        -armTemplate "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json"
+        -armTemplateParameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json"
+        -ResourceGroupName "$(destAdfRg)"
+        -DataFactoryName "$(destAdf)"
+        -predeployment $true
+        -deleteDeployment $false
+  
+  #------------------------------------
+  # Deploy Standard ARM Template
+  #------------------------------------
+  - task: AzureCLI@2
+    displayName: Deploy Standard ARM Template
+    condition: and( succeeded(), eq('${{ parameters.deployTemplate }}', 'standard') )
+    inputs:
+      azureSubscription: $(azureServiceConnection)
+      scriptType: pscore
+      scriptLocation: inlineScript
       inlineScript: |
-        az deployment group what-if `
-          --resource-group $(destAdfRg) `
-          --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json `
-          --parameters $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json `
-          --parameters $(destAdfParams)
-    ${{ else }}:
-      inlineScript: |
-        az deployment group create `
+        az deployment group ${{ iif(eq(parameters.whatIf, true), 'what-if', 'create') }} `
           --resource-group $(destAdfRg) `
           --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateForFactory.json `
           --parameters $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\ARMTemplateParametersForFactory.json `
@@ -125,26 +114,15 @@ steps:
     azureSubscription: $(azureServiceConnection)
     scriptType: pscore
     scriptLocation: inlineScript
-    ${{ if eq(parameters.whatIf, true) }}:
-      inlineScript: |
-        # remove the trailing '/' from the Uri
-        $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "$(linkedTemplatesStorageContainer)/", "$(linkedTemplatesStorageContainer)"
-        
-        az deployment group what-if `
-          --resource-group $(destAdfRg) `
-          --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
-          --parameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
-          --parameters $(destAdfParams) containerUri="$fixedURI" containerSasToken='"$(AzureFileCopy.StorageContainerSasToken)"'
-    ${{ else }}:
-      inlineScript: |
-        # remove the trailing '/' from the Uri
-        $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "$(linkedTemplatesStorageContainer)/", "$(linkedTemplatesStorageContainer)"
-        
-        az deployment group create `
-          --resource-group $(destAdfRg) `
-          --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
-          --parameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
-          --parameters $(destAdfParams) containerUri="$fixedURI" containerSasToken='"$(AzureFileCopy.StorageContainerSasToken)"'
+    inlineScript: |
+      # remove the trailing '/' from the Uri
+      $fixedURI = "$(AzureFileCopy.StorageContainerUri)" -replace "$(linkedTemplatesStorageContainer)/", "$(linkedTemplatesStorageContainer)"
+      
+      az deployment group ${{ iif(eq(parameters.whatIf, true), 'what-if', 'create') }} `
+        --resource-group $(destAdfRg) `
+        --template-file $(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplate_master.json `
+        --parameters "$(System.DefaultWorkingDirectory)\adfTemplates\$(sourceAdf)\linkedTemplates\ArmTemplateParameters_master.json" `
+        --parameters $(destAdfParams) containerUri="$fixedURI" containerSasToken='"$(AzureFileCopy.StorageContainerSasToken)"'
 
 #------------------------------------
 # End Deploy
